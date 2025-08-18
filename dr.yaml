@@ -74,7 +74,7 @@ global_assumptions:
   tsp_return_pre_retirement: "0.06"  # Conservative estimate for L 2030 funds
   tsp_return_post_retirement: "0.04"
   cola_general_rate: "0.02"
-  projection_years: 20
+  projection_years: 30
   current_location:
     state: "PA"
     county: "Bucks"

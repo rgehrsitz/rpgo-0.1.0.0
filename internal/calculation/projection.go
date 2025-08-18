@@ -212,6 +212,36 @@ func (ce *CalculationEngine) GenerateAnnualProjection(robert, dawn *domain.Emplo
 		if !dawnIsDeceased {
 			ssDawn = CalculateSSBenefitForYear(dawn, scenario.Dawn.SSStartAge, year, assumptions.COLAGeneralRate)
 		}
+
+		// Prorate Social Security if the person reaches their SS start age during this calendar year
+		yearEnd := time.Date(projectionDate.Year(), 12, 31, 23, 59, 59, 0, time.UTC)
+		// Robert
+		ageRobertStart := ageRobert
+		ageRobertEnd := robert.Age(yearEnd)
+		if ageRobertStart < scenario.Robert.SSStartAge && ageRobertEnd >= scenario.Robert.SSStartAge {
+			// birthday occurs this year; prorate SS for months/days after birthday
+			birthdayThisYear := time.Date(projectionDate.Year(), robert.BirthDate.Month(), robert.BirthDate.Day(), 0, 0, 0, 0, time.UTC)
+			daysAfter := yearEnd.Sub(birthdayThisYear).Hours() / 24.0
+			daysInYear := float64(dateutil.DaysInYear(projectionDate.Year()))
+			frac := daysAfter / daysInYear
+			if frac < 0 {
+				frac = 0
+			}
+			ssRobert = ssRobert.Mul(decimal.NewFromFloat(frac))
+		}
+		// Dawn
+		ageDawnStart := ageDawn
+		ageDawnEnd := dawn.Age(yearEnd)
+		if ageDawnStart < scenario.Dawn.SSStartAge && ageDawnEnd >= scenario.Dawn.SSStartAge {
+			birthdayThisYear := time.Date(projectionDate.Year(), dawn.BirthDate.Month(), dawn.BirthDate.Day(), 0, 0, 0, 0, time.UTC)
+			daysAfter := yearEnd.Sub(birthdayThisYear).Hours() / 24.0
+			daysInYear := float64(dateutil.DaysInYear(projectionDate.Year()))
+			frac := daysAfter / daysInYear
+			if frac < 0 {
+				frac = 0
+			}
+			ssDawn = ssDawn.Mul(decimal.NewFromFloat(frac))
+		}
 		// Survivor SS refined: compute survivor benefit factoring early-claim reduction
 		if robertIsDeceased && !dawnIsDeceased {
 			fra := dateutil.FullRetirementAge(dawn.BirthDate)
@@ -280,6 +310,44 @@ func (ce *CalculationEngine) GenerateAnnualProjection(robert, dawn *domain.Emplo
 
 		// Calculate TSP withdrawals and update balances
 		var tspWithdrawalRobert, tspWithdrawalDawn decimal.Decimal
+
+		// Calculate RMD amounts (full and prorated) for this year for each person
+		rmdRobert := decimal.Zero
+		rmdDawn := decimal.Zero
+		// Robert RMD
+		rmdAgeRobert := dateutil.GetRMDAge(robert.BirthDate.Year())
+		ageRobertEnd = robert.Age(yearEnd)
+		if ageRobert < rmdAgeRobert && ageRobertEnd >= rmdAgeRobert {
+			// First RMD year: prorate based on birthday
+			birthdayThisYear := time.Date(projectionDate.Year(), robert.BirthDate.Month(), robert.BirthDate.Day(), 0, 0, 0, 0, time.UTC)
+			daysAfter := yearEnd.Sub(birthdayThisYear).Hours() / 24.0
+			daysInYear := float64(dateutil.DaysInYear(projectionDate.Year()))
+			frac := daysAfter / daysInYear
+			if frac < 0 {
+				frac = 0
+			}
+			fullRMD := CalculateRMD(currentTSPTraditionalRobert, robert.BirthDate.Year(), rmdAgeRobert)
+			rmdRobert = fullRMD.Mul(decimal.NewFromFloat(frac))
+		} else if ageRobert >= rmdAgeRobert {
+			// Regular RMD year (apply full amount)
+			rmdRobert = CalculateRMD(currentTSPTraditionalRobert, robert.BirthDate.Year(), ageRobert)
+		}
+		// Dawn RMD
+		rmdAgeDawn := dateutil.GetRMDAge(dawn.BirthDate.Year())
+		ageDawnEnd = dawn.Age(yearEnd)
+		if ageDawn < rmdAgeDawn && ageDawnEnd >= rmdAgeDawn {
+			birthdayThisYear := time.Date(projectionDate.Year(), dawn.BirthDate.Month(), dawn.BirthDate.Day(), 0, 0, 0, 0, time.UTC)
+			daysAfter := yearEnd.Sub(birthdayThisYear).Hours() / 24.0
+			daysInYear := float64(dateutil.DaysInYear(projectionDate.Year()))
+			frac := daysAfter / daysInYear
+			if frac < 0 {
+				frac = 0
+			}
+			fullRMD := CalculateRMD(currentTSPTraditionalDawn, dawn.BirthDate.Year(), rmdAgeDawn)
+			rmdDawn = fullRMD.Mul(decimal.NewFromFloat(frac))
+		} else if ageDawn >= rmdAgeDawn {
+			rmdDawn = CalculateRMD(currentTSPTraditionalDawn, dawn.BirthDate.Year(), ageDawn)
+		}
 		if isRobertRetired && !robertIsDeceased {
 			// For 4% rule: Always withdraw 4% of initial balance (adjusted for inflation)
 			if scenario.Robert.TSPWithdrawalStrategy == "4_percent_rule" {
@@ -301,14 +369,14 @@ func (ce *CalculationEngine) GenerateAnnualProjection(robert, dawn *domain.Emplo
 				targetIncome := pensionRobert.Add(pensionDawn).Add(ssRobert).Add(ssDawn).Add(srsRobert).Add(srsDawn)
 
 				// Calculate withdrawals
-				tspWithdrawalRobert = robertStrategy.CalculateWithdrawal(
-					currentTSPTraditionalRobert.Add(currentTSPRothRobert),
-					year-robertRetirementYear+1,
-					targetIncome,
-					ageRobert,
-					dateutil.IsRMDYear(robert.BirthDate, projectionDate),
-					CalculateRMD(currentTSPTraditionalRobert, robert.BirthDate.Year(), ageRobert),
-				)
+					tspWithdrawalRobert = robertStrategy.CalculateWithdrawal(
+						currentTSPTraditionalRobert.Add(currentTSPRothRobert),
+						year-robertRetirementYear+1,
+						targetIncome,
+						ageRobert,
+						(dateutil.IsRMDYear(robert.BirthDate, projectionDate) || rmdRobert.GreaterThan(decimal.Zero)),
+						rmdRobert,
+					)
 				// Adjust for partial year if retiring this year
 				if year == robertRetirementYear {
 					tspWithdrawalRobert = tspWithdrawalRobert.Mul(decimal.NewFromInt(1).Sub(robertWorkFraction))
@@ -340,8 +408,8 @@ func (ce *CalculationEngine) GenerateAnnualProjection(robert, dawn *domain.Emplo
 					year-dawnRetirementYear+1,
 					targetIncome,
 					ageDawn,
-					dateutil.IsRMDYear(dawn.BirthDate, projectionDate),
-					CalculateRMD(currentTSPTraditionalDawn, dawn.BirthDate.Year(), ageDawn),
+					(dateutil.IsRMDYear(dawn.BirthDate, projectionDate) || rmdDawn.GreaterThan(decimal.Zero)),
+					rmdDawn,
 				)
 				// Adjust for partial year if retiring this year
 				if year == dawnRetirementYear {

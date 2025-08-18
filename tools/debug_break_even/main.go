@@ -25,49 +25,52 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	if len(res.Scenarios) < 2 {
-		fmt.Println("need 2 scenarios")
+	if len(res.Scenarios) < 1 {
+		fmt.Println("no scenarios")
 		return
 	}
-	projA := res.Scenarios[0].Projection
-	projB := res.Scenarios[1].Projection
-	fmt.Println("Index,DateA.IsRetired,DateB.IsRetired,DateA.Year,DateA.Date,NetA,NetB,CumA,CumB,Diff")
 
-	cumA := decimal.Zero
-	cumB := decimal.Zero
-	crossed := false
-
-	for i := 0; i < len(projA) && i < len(projB); i++ {
-		cumA = cumA.Add(projA[i].NetIncome)
-		cumB = cumB.Add(projB[i].NetIncome)
-		diff := cumA.Sub(cumB)
-
-		fmt.Printf("%d,%v,%v,%d,%v,%s,%s,%s,%s,%s\n",
-			i,
-			projA[i].IsRetired,
-			projB[i].IsRetired,
-			projA[i].Year,
-			projA[i].Date.Format("2006-01-02"),
-			projA[i].NetIncome.StringFixed(0),
-			projB[i].NetIncome.StringFixed(0),
-			cumA.StringFixed(0),
-			cumB.StringFixed(0),
-			diff.StringFixed(0),
-		)
-
-		// Note if sign changes (crossing) between years
-		if !crossed && i > 0 {
-			// compute previous diff by subtracting this year's nets
-			prevCumA := cumA.Sub(projA[i].NetIncome)
-			prevCumB := cumB.Sub(projB[i].NetIncome)
-			prevDiff := prevCumA.Sub(prevCumB)
-			if prevDiff.Mul(diff).LessThan(decimal.Zero) || diff.Abs().LessThan(decimal.NewFromFloat(0.01)) {
-				fmt.Printf("-- crossover detected between years %d and %d (prevDiff=%s currDiff=%s)\n", projA[i-1].Date.Year(), projA[i].Date.Year(), prevDiff.StringFixed(0), diff.StringFixed(0))
-				crossed = true
-			}
+	// Find the minimum projection length across scenarios
+	minLen := -1
+	for _, s := range res.Scenarios {
+		if minLen == -1 || len(s.Projection) < minLen {
+			minLen = len(s.Projection)
 		}
 	}
+	if minLen <= 0 {
+		fmt.Println("no projection data")
+		return
+	}
 
-	be, err := calc.CalculateCumulativeBreakEven(projA, projB)
-	fmt.Printf("\nBreakEven: %+v, err=%v\n", be, err)
+	// Header
+	header := "Index,Date,Year"
+	for i := range res.Scenarios {
+		header += fmt.Sprintf(",S%d_Salary,S%d_Pension,S%d_TSP,S%d_SS,S%d_Net", i+1, i+1, i+1, i+1, i+1)
+	}
+	fmt.Println(header)
+
+	// Iterate years and print components
+	for idx := 0; idx < minLen; idx++ {
+		row := fmt.Sprintf("%d,%s,%d", idx, res.Scenarios[0].Projection[idx].Date.Format("2006-01-02"), res.Scenarios[0].Projection[idx].Date.Year())
+		for sidx := range res.Scenarios {
+			p := res.Scenarios[sidx].Projection[idx]
+			row += fmt.Sprintf(",%s,%s,%s,%s,%s", p.SalaryRobert.Add(p.SalaryDawn).StringFixed(0), p.PensionRobert.Add(p.PensionDawn).StringFixed(0), p.TSPWithdrawalRobert.Add(p.TSPWithdrawalDawn).StringFixed(0), p.SSBenefitRobert.Add(p.SSBenefitDawn).StringFixed(0), p.NetIncome.StringFixed(0))
+		}
+		fmt.Println(row)
+	}
+
+	// If at least two scenarios, compute cumulative diffs for first two
+	if len(res.Scenarios) >= 2 {
+		a := res.Scenarios[0].Projection
+		b := res.Scenarios[1].Projection
+		cumA := decimal.Zero
+		cumB := decimal.Zero
+		for i := 0; i < len(a) && i < len(b); i++ {
+			cumA = cumA.Add(a[i].NetIncome)
+			cumB = cumB.Add(b[i].NetIncome)
+			fmt.Printf("Cumulative Year %d: cumA=%s cumB=%s diff=%s\n", a[i].Date.Year(), cumA.StringFixed(0), cumB.StringFixed(0), cumA.Sub(cumB).StringFixed(0))
+		}
+		be, err := calc.CalculateCumulativeBreakEven(a, b)
+		fmt.Printf("\nBreakEven: %+v, err=%v\n", be, err)
+	}
 }

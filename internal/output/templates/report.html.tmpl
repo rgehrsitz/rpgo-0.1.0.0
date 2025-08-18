@@ -14,7 +14,7 @@ h1 { margin:0 0 4px 0; font-weight:400; }
 .table th:first-child, .table td:first-child { text-align:left; }
 .table thead { background:#e5eef5; }
 .badge { display:inline-block; background:#3498db; color:#fff; padding:2px 6px; border-radius:4px; font-size:12px; }
-.chart-container { position: relative; height: 400px; margin: 20px 0; }
+.chart-container { position: relative; height: 560px; margin: 20px 0; }
 .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
 @media (max-width: 768px) {
   .chart-grid { grid-template-columns: 1fr; }
@@ -340,7 +340,19 @@ if (scenarioData.length >= 2) {
       afterDraw: (chart) => {
         if (!chart.options.scales || !chart.chartArea) return;
         const xScale = chart.scales.x;
-        const x = xScale.getPixelForValue(crossover.calendarYear);
+        // Allow explicit server-provided month/year when available
+        let xValue = crossover.calendarYear;
+        let labelText = null;
+        if (serverBreakEven && serverBreakEven.break_even_year) {
+          const month = serverBreakEven.break_even_month || serverBreakEven.BreakEvenMonth || null;
+          const year = serverBreakEven.break_even_year || serverBreakEven.BreakEvenYear || null;
+          if (month && year) {
+            // compute a fractional calendar year for positioning
+            xValue = year + ((month - 1) / 12);
+            labelText = (['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][month-1] + ' ' + year);
+          }
+        }
+        const x = xScale.getPixelForValue(xValue);
         const ctx = chart.ctx;
         ctx.save();
         // Draw dashed vertical line
@@ -352,8 +364,9 @@ if (scenarioData.length >= 2) {
         ctx.lineTo(x, chart.chartArea.bottom);
         ctx.stroke();
 
-  // Draw label box near top: show month/year and rounded-to-thousands amount
-  const label = 'Break-even: ' + monthYearFromFraction(crossover.calendarYear, crossover.fraction) + ' — ' + roundToThousands(crossover.cumulative);
+  // Draw label box near top: prefer explicit month/year (labelText) otherwise fall back to fractional
+  const monthYearLabel = labelText || monthYearFromFraction(crossover.calendarYear, crossover.fraction);
+  const label = 'Break-even: ' + monthYearLabel + ' — ' + roundToThousands(crossover.cumulative);
         ctx.setLineDash([]);
         ctx.fillStyle = '#222';
         ctx.font = '12px Arial';

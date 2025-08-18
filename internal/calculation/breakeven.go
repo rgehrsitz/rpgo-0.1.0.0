@@ -168,12 +168,20 @@ func CalculateCumulativeBreakEven(projA, projB []domain.AnnualCashFlow) (*Cumula
 		n = len(projB)
 	}
 
+	// Start accumulation at the projection start (index 0).
+	// Previously we tried to begin at the first year both were retired to avoid
+	// spurious crossovers from identical pre-retirement rows. That approach
+	// hid legitimate cumulative differences when one scenario retires earlier.
+	// Instead, start at 0 and only ignore an exact equality at the very first
+	// projection index as trivial.
+	start := 0
+
 	cumA := decimal.Zero
 	cumB := decimal.Zero
 
-	// Iterate years and find first sign change in (cumA - cumB)
+	// Iterate years starting from 'start' and find first sign change in (cumA - cumB)
 	var prevDiff decimal.Decimal
-	for i := 0; i < n; i++ {
+	for i := start; i < n; i++ {
 		// For year i (0-based), compute diff after adding this year's net income
 		yearNetA := projA[i].NetIncome
 		yearNetB := projB[i].NetIncome
@@ -187,16 +195,22 @@ func CalculateCumulativeBreakEven(projA, projB []domain.AnnualCashFlow) (*Cumula
 
 		// Check exact equality within a small tolerance (1 cent)
 		if currDiff.Abs().LessThan(decimal.NewFromFloat(0.01)) {
-			// Crossover occurs exactly at year end i
-			calendarYear := float64(projA[i].Date.Year())
-			return &CumulativeBreakEvenResult{
-				YearIndex:        projA[i].Year,
-				CalendarYear:     calendarYear,
-				Fraction:         decimal.NewFromInt(1),
-				CumulativeAmount: cumA,
-				PrevYear:         projA[i].Date.Year() - 1,
-				NextYear:         projA[i].Date.Year(),
-			}, nil
+			// If this occurs at the very first projection index (no prior accumulation),
+			// ignore as trivial and continue searching.
+			if i == 0 {
+				// continue searching
+			} else {
+				// Crossover occurs exactly at year end i
+				calendarYear := float64(projA[i].Date.Year())
+				return &CumulativeBreakEvenResult{
+					YearIndex:        projA[i].Year,
+					CalendarYear:     calendarYear,
+					Fraction:         decimal.NewFromInt(1),
+					CumulativeAmount: cumA,
+					PrevYear:         projA[i].Date.Year() - 1,
+					NextYear:         projA[i].Date.Year(),
+				}, nil
+			}
 		}
 
 		// If sign changed between prevDiff and currDiff, we crossed inside this year

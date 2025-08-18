@@ -151,6 +151,10 @@ type CumulativeBreakEvenResult struct {
 	// Bookkeeping: previous and next integer calendar years
 	PrevYear int `json:"prev_year"`
 	NextYear int `json:"next_year"`
+
+	// Explicit month and year for convenience (month: 1..12)
+	BreakEvenMonth int `json:"break_even_month"`
+	BreakEvenYear  int `json:"break_even_year"`
 }
 
 // CalculateCumulativeBreakEven finds the first crossover (if any) between cumulative net income
@@ -202,6 +206,9 @@ func CalculateCumulativeBreakEven(projA, projB []domain.AnnualCashFlow) (*Cumula
 			} else {
 				// Crossover occurs exactly at year end i
 				calendarYear := float64(projA[i].Date.Year())
+				// exact year-end -> month = December
+				month := 12
+				year := projA[i].Date.Year()
 				return &CumulativeBreakEvenResult{
 					YearIndex:        projA[i].Year,
 					CalendarYear:     calendarYear,
@@ -209,6 +216,8 @@ func CalculateCumulativeBreakEven(projA, projB []domain.AnnualCashFlow) (*Cumula
 					CumulativeAmount: cumA,
 					PrevYear:         projA[i].Date.Year() - 1,
 					NextYear:         projA[i].Date.Year(),
+					BreakEvenMonth:   month,
+					BreakEvenYear:    year,
 				}, nil
 			}
 		}
@@ -224,6 +233,14 @@ func CalculateCumulativeBreakEven(projA, projB []domain.AnnualCashFlow) (*Cumula
 				calendarYearPrev := projA[i-1].Date.Year()
 				cumAprev := cumA.Sub(yearNetA)
 				cumAt := cumAprev.Add(yearNetA.Mul(t))
+				// compute month from fraction (1..12)
+				month := int((t.InexactFloat64()) * 12)
+				if month < 1 {
+					month = 1
+				}
+				if month > 12 {
+					month = 12
+				}
 				return &CumulativeBreakEvenResult{
 					YearIndex:        projA[i].Year,
 					CalendarYear:     float64(calendarYearPrev) + t.InexactFloat64(),
@@ -231,6 +248,8 @@ func CalculateCumulativeBreakEven(projA, projB []domain.AnnualCashFlow) (*Cumula
 					CumulativeAmount: cumAt,
 					PrevYear:         calendarYearPrev,
 					NextYear:         projA[i].Date.Year(),
+					BreakEvenMonth:   month,
+					BreakEvenYear:    calendarYearPrev,
 				}, nil
 			}
 
@@ -246,6 +265,15 @@ func CalculateCumulativeBreakEven(projA, projB []domain.AnnualCashFlow) (*Cumula
 			cumAprev := cumA.Sub(yearNetA)
 			cumAt := cumAprev.Add(yearNetA.Mul(t))
 
+			// compute month from fraction (1..12)
+			month := int((t.InexactFloat64()) * 12)
+			if month < 1 {
+				month = 1
+			}
+			if month > 12 {
+				month = 12
+			}
+
 			return &CumulativeBreakEvenResult{
 				YearIndex:        projA[i].Year,
 				CalendarYear:     float64(calendarYearPrev) + t.InexactFloat64(),
@@ -253,6 +281,8 @@ func CalculateCumulativeBreakEven(projA, projB []domain.AnnualCashFlow) (*Cumula
 				CumulativeAmount: cumAt,
 				PrevYear:         calendarYearPrev,
 				NextYear:         projA[i].Date.Year(),
+				BreakEvenMonth:   month,
+				BreakEvenYear:    calendarYearPrev,
 			}, nil
 		}
 	}

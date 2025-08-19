@@ -1,8 +1,9 @@
-# Gehrsitz Family Financial Data Extract
+# Family Financial Data Extract
 
 ## Personal Information
 
-### Robert F. Gehrsitz
+### Person A - Personal Details
+
 - **Date of Birth:** February 25, 1965 (Age 60)
 - **Social Security Number:** ***-**-5061 (last 4 digits)
 - **Address:** 8 Spring Ct, Washington Crossing, PA 18977-1442
@@ -12,7 +13,8 @@
 - **Service Computation Date (Leave):** June 22, 1987
 - **High-3:** $190,000
 
-### Dawn M. Gehrsitz  
+### Person B - Personal Details
+
 - **Date of Birth:** July 31, 1963 (Age 61, turning 62 soon)
 - **Social Security Number:** ***-**-0570 (last 4 digits)
 - **Address:** 8 Spring Ct, Washington Crossing, PA 18977-1442
@@ -24,7 +26,8 @@
 
 ## Current Income (2025)
 
-### Robert F. Gehrsitz
+### Person A - Current Income
+
 - **Annual Base Salary:** $138,296.00
 - **Locality Pay:** $52,483.00
 - **Total Adjusted Salary:** $190,779.00
@@ -32,7 +35,8 @@
 - **Year-to-Date Gross (through 06/28/25):** $106,545.80
 - **Year-to-Date Taxable Wages:** $85,568.14
 
-### Dawn M. Gehrsitz
+### Person B - Current Income
+
 - **Annual Base Salary:** $128,032.00
 - **Locality Pay:** $48,588.00
 - **Total Adjusted Salary:** $176,620.00
@@ -42,7 +46,8 @@
 
 ## 2024 Tax Year (W-2 Data)
 
-### Robert F. Gehrsitz
+### Person A - W-2 Data
+
 - **Total Wages (Box 1):** $163,029.10
 - **Federal Tax Withheld (Box 2):** $33,732.47
 - **Social Security Wages (Box 3):** $168,600.00
@@ -56,7 +61,8 @@
   - V (Pretax FEHB Incentive): $7,770.38
   - D (401k Deferrals): $26,962.00
 
-### Dawn M. Gehrsitz
+### Person B - W-2 Data
+
 - **Total Wages (Box 1):** $142,100.00
 - **Federal Tax Withheld (Box 2):** $14,943.98
 - **Social Security Wages (Box 3):** $168,600.00
@@ -71,7 +77,8 @@
 
 ## Thrift Savings Plan (TSP) Accounts
 
-### Robert F. Gehrsitz (Statement Date: July 18, 2025)
+### Person A (Statement Date: July 18, 2025)
+
 - **Account Balance:** $1,966,168.86
 - **Vested Balance:** $1,966,168.86
 - **Statement Period:** 07-18-2023 to 07-17-2025
@@ -84,9 +91,10 @@
   - L 2030: 100% (current), 100% (future)
   - C Fund: <1%
   - S Fund: <1%
-- **Beneficiary:** Dawn M. Gehrsitz (100% Spouse)
+- **Beneficiary:** Person B (100% Spouse)
 
-### Dawn M. Gehrsitz (Statement Date: July 5, 2025)  
+### Person B (Statement Date: July 5, 2025)  
+
 - **Account Balance:** $1,525,175.90
 - **Vested Balance:** $1,525,175.90
 - **Statement Period:** 04-01-2025 to 06-30-2025 (Quarterly)
@@ -98,14 +106,14 @@
 - **Fund Allocation:**
   - L Income: 100% (current), 0% (future)
   - L 2030: <1% (current), 100% (future)
-- **Primary Beneficiary:** Robert F. Gehrsitz (100% Spouse)
-- **Contingent Beneficiaries:** 
-  - Michael J. Gehrsitz (Equal - Child)
-  - Timothy Gehrsitz (Equal - Child)
+- **Primary Beneficiary:** Person A (100% Spouse)
+- **Contingent Beneficiaries:**
+- **Contingent Beneficiaries:** (redacted for privacy)
 
 ## Social Security Benefits Projections
 
-### Robert F. Gehrsitz
+### Person A
+
 - **Retirement Benefits (Monthly):**
   - Age 62: $2,795
   - Age 63: $2,985
@@ -124,7 +132,8 @@
   - Maximum family benefit: $6,956/month
   - One-time death benefit: $255
 
-### Dawn M. Gehrsitz
+### Person B
+
 - **Retirement Benefits (Monthly):**
   - Age 62: $2,527
   - Age 63: $2,731
@@ -145,7 +154,8 @@
 
 ## Current Deductions (2025)
 
-### Robert F. Gehrsitz (Pay Period 06/28/25)
+### Person A (Pay Period 06/28/25)
+
 | Deduction | Current Period | Year-to-Date |
 |-----------|----------------|--------------|
 | Federal Tax | $1,175.38 | $17,467.82 |
@@ -158,7 +168,8 @@
 | FEGLI Basic | $30.88 | $431.04 |
 | FEGLI Optional | $311.60 | $3,322.96 |
 
-### Dawn M. Gehrsitz (Pay Period 07/12/25)
+### Person B (Pay Period 07/12/25)
+
 | Deduction | Current Period | Year-to-Date |
 |-----------|----------------|--------------|
 | Federal Tax | $527.22 | $8,111.23 |
@@ -173,26 +184,30 @@
 
 ## Leave Balances (Current)
 
-### Robert F. Gehrsitz
+### Person A (Leave Balance)
+
 - **Annual Leave:** 180.00 hours current balance
 - **Sick Leave:** 1,868.00 hours current balance
 - **Travel Comp Time:** 8.00 hours
 - **Holiday:** 36.00 hours accrued YTD
 
-### Dawn M. Gehrsitz
+### Person B (Leave Balance)
+
 - **Annual Leave:** 135.00 hours current balance  
 - **Sick Leave:** 1,057.50 hours current balance
 - **Holiday:** 45.00 hours accrued YTD
 
 ## Historical Social Security Taxes Paid
 
-### Robert F. Gehrsitz (Career Total)
+### Person A (Career Total)
+
 - **Employee Social Security Taxes:** $210,817
 - **Employer Social Security Taxes:** $215,171
 - **Employee Medicare Taxes:** $56,346
 - **Employer Medicare Taxes:** $56,346
 
-### Dawn M. Gehrsitz (Career Total)
+### Person B (Career Total)
+
 - **Employee Social Security Taxes:** $165,475
 - **Employer Social Security Taxes:** $169,740
 - **Employee Medicare Taxes:** $40,302
@@ -201,12 +216,14 @@
 ## Key Financial Totals
 
 ### Combined Household (Current)
+
 - **Combined TSP Balance:** $3,491,344.76
 - **Combined Annual Salary:** $367,399.00
 - **Combined Social Security Benefits at Full Retirement:** $7,838/month
 - **Combined Maximum Social Security at Age 70:** $9,860/month
 
 ### Retirement System
+
 - **Both enrolled in FERS (Federal Employees Retirement System)**
 - **Both have Medicare eligibility at age 65**
 - **Both qualify for full Social Security benefits**
@@ -214,7 +231,7 @@
 
 ## Notes for Retirement Planning Agent
 
-1. **Ages:** Robert (60), Dawn (61) - both approaching early retirement eligibility
+1. **Ages:** Person A (60), Person B (61) - both approaching early retirement eligibility
 2. **Federal Employees:** Subject to FERS retirement system rules
 3. **TSP Accounts:** Substantial balances with different investment strategies
 4. **Social Security:** Both have significant earnings history and benefit projections

@@ -32,7 +32,7 @@ A comprehensive retirement planning calculator for Federal Employees Retirement 
 ### Build from Source
 
 ```bash
-git clone https://github.com/rgehrsitz/rpgo.git
+git clone https://github.com/example/rpgo.git
 cd rpgo
 go mod tidy
 go build -o fers-calc cmd/cli/main.go
@@ -43,21 +43,25 @@ go build -o fers-calc cmd/cli/main.go
 ### Quick Start
 
 1. **Generate an example configuration**:
+
    ```bash
    ./fers-calc example config.yaml
    ```
 
 2. **Run calculations**:
+
    ```bash
    ./fers-calc calculate config.yaml
    ```
 
 3. **Generate HTML report**:
+
    ```bash
    ./fers-calc calculate config.yaml --format html > report.html
    ```
 
 4. **Run Monte Carlo simulations**:
+
    ```bash
    # Simple portfolio Monte Carlo (uses flags)
    ./fers-calc historical monte-carlo ./data --simulations 1000 --balance 1000000 --withdrawal 40000
@@ -117,9 +121,11 @@ To help you understand the core commands, here's a breakdown:
 #### Output formats and aliases
 
 Supported `--format` values:
+
 - `console`, `console-lite`, `csv`, `detailed-csv`, `html`, `json`, `all`
 
 Aliases map to canonical names:
+
 - `console-verbose` → `console`; `verbose` → `console`
 - `csv-detailed` → `detailed-csv`; `csv-summary` → `csv`
 - `html-report` → `html`; `json-pretty` → `json`
@@ -139,8 +145,8 @@ The calculator uses YAML configuration files. Here's an example structure:
 
 ```yaml
 personal_details:
-  robert:
-    name: "Robert"
+  person_a:
+    name: "Person A"
     birth_date: "1963-06-15"
     hire_date: "1985-03-20"
     current_salary: 95000
@@ -162,8 +168,8 @@ personal_details:
       f_fund: "0.10"  # 10% F Fund (Fixed Income Index)
       g_fund: "0.00"  # 0% G Fund (Government Securities)
 
-  dawn:
-    name: "Dawn"
+  person_b:
+    name: "Person B"
     birth_date: "1965-08-22"
     hire_date: "1988-07-10"
     current_salary: 87000
@@ -199,26 +205,26 @@ global_assumptions:
 
 scenarios:
   - name: "Early Retirement 2025"
-    robert:
-      employee_name: "robert"
+    person_a:
+      employee_name: "person_a"
       retirement_date: "2025-12-31"
       ss_start_age: 62
       tsp_withdrawal_strategy: "4_percent_rule"
-    dawn:
-      employee_name: "dawn"
+    person_b:
+      employee_name: "person_b"
       retirement_date: "2025-12-31"
       ss_start_age: 62
       tsp_withdrawal_strategy: "4_percent_rule"
 
   - name: "Delayed Retirement 2028"
-    robert:
-      employee_name: "robert"
+    person_a:
+      employee_name: "person_a"
       retirement_date: "2028-12-31"
       ss_start_age: 67
       tsp_withdrawal_strategy: "need_based"
       tsp_withdrawal_target_monthly: 3000
-    dawn:
-      employee_name: "dawn"
+    person_b:
+      employee_name: "person_b"
       retirement_date: "2028-12-31"
       ss_start_age: 62
       tsp_withdrawal_strategy: "4_percent_rule"
@@ -241,19 +247,22 @@ scenarios:
 ### TSP Configuration
 
 #### TSP Allocations vs Lifecycle Funds
+
 For **deterministic calculations**, both approaches work equivalently:
+
 - **Manual TSP Allocation**: Specify exact percentages for each fund (C, S, I, F, G)
 - **TSP Lifecycle Fund**: Use predefined lifecycle funds (L2030, L2035, L2040, L Income)
 
 For **Monte Carlo simulations**, use **manual TSP allocations** for proper market variability:
+
 ```yaml
 # ✅ Recommended for Monte Carlo
 tsp_allocation:
   c_fund: "0.60"  # 60% C Fund
   s_fund: "0.20"  # 20% S Fund
-  i_fund: "0.10"  # 10% I Fund
-  f_fund: "0.10"  # 10% F Fund
-  g_fund: "0.00"  # 0% G Fund
+  i_fund: "0.10"  # 10% I Fund (International Stock Index)
+  f_fund: "0.10"  # 10% F Fund (Fixed Income Index)
+  g_fund: "0.00"  # 0% G Fund (Government Securities)
 
 # ❌ Avoid for Monte Carlo (produces identical results)
 # tsp_lifecycle_fund:
@@ -261,6 +270,7 @@ tsp_allocation:
 ```
 
 #### TSP Fund Types
+
 - **C Fund**: S&P 500 Index (Large Cap Stock)
 - **S Fund**: Small Cap Stock Index (Russell 2000)
 - **I Fund**: International Stock Index (MSCI World ex-US)
@@ -277,6 +287,7 @@ tsp_allocation:
 ### Monte Carlo Analysis
 
 #### Simple Portfolio Monte Carlo
+
 - **Historical Data**: Real TSP fund returns, inflation, and COLA data (1990-2023)
 - **Withdrawal Strategies**: Fixed amount, percentage, inflation-adjusted, guardrails
 - **Risk Assessment**: Success rates, percentile analysis, drawdown tracking
@@ -284,6 +295,7 @@ tsp_allocation:
 - **Parallel Processing**: Efficient simulation execution for 1000+ scenarios
 
 #### Comprehensive FERS Monte Carlo
+
 - **Full FERS Integration**: Models all retirement components (pension, SS, TSP, taxes, FEHB)
 - **Market Variability**: Historical or statistical market condition generation
 - **Income Sustainability**: Success rates based on complete retirement income
@@ -293,7 +305,8 @@ tsp_allocation:
 
 #### Monte Carlo Examples
 
-**Conservative 4% Rule (25 years)**
+#### Conservative 4% Rule (25 years)
+
 ```bash
 ./fers-calc historical monte-carlo ./data \
   --simulations 1000 \
@@ -301,24 +314,30 @@ tsp_allocation:
   --withdrawal 40000 \
   --strategy fixed_amount
 ```
-*Result: 99% success rate, median ending balance $6.6M*
 
-**Comprehensive FERS Analysis**
+Result: 99% success rate, median ending balance $6.6M
+
+### Comprehensive FERS Analysis
+
 ```bash
 ./fers-calc monte-carlo config.yaml ./data \
   --simulations 1000
 ```
-*Result: 100% success rate, median net income $234,681, low risk assessment*
 
-**High-Precision FERS Analysis**
+*Result: 100% success rate, median net income $234,681, low risk assessment
+
+High-Precision FERS Analysis
+
 ```bash
 ./fers-calc monte-carlo config.yaml ./data \
   --simulations 5000 \
   --seed 12345
 ```
-*Result: Reproducible results with comprehensive risk analysis*
 
-**Aggressive 6% Rule with Guardrails (Simple Portfolio)**
+*Result: Reproducible results with comprehensive risk analysis
+
+Aggressive 6% Rule with Guardrails (Simple Portfolio)
+
 ```bash
 ./fers-calc historical monte-carlo ./data \
   --simulations 1000 \
@@ -327,9 +346,11 @@ tsp_allocation:
   --strategy guardrails \
   --years 30
 ```
-*Result: 82% success rate, high risk assessment*
 
-**Inflation-Adjusted Strategy (Simple Portfolio)**
+Result: 82% success rate, high risk assessment
+
+Inflation-Adjusted Strategy (Simple Portfolio)
+
 ```bash
 ./fers-calc historical monte-carlo ./data \
   --simulations 500 \
@@ -338,7 +359,8 @@ tsp_allocation:
   --strategy inflation_adjusted \
   --years 30
 ```
-*Result: 84% success rate, moderate risk assessment*
+
+Result: 84% success rate, moderate risk assessment
 
 ### Social Security
 
@@ -355,7 +377,7 @@ tsp_allocation:
 
 ## Project Structure
 
-```
+```text
 rpgo/
 ├── cmd/cli/                 # Command line interface
 ├── data/                   # Historical financial data

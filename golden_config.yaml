@@ -16,10 +16,10 @@
 
 personal_details:
   # ================================================================================================
-  # EMPLOYEE 1: "Robert Gehrsitz" - FICTIONAL PRIMARY EMPLOYEE (REQUIRED NAME: "robert")
+  # EMPLOYEE 1: "Person A" - FICTIONAL PRIMARY EMPLOYEE (REQUIRED NAME: "person_a")
   # ================================================================================================
-  robert:
-    name: "Robert Gehrsitz"
+  person_a:
+    name: "Person A"
     birth_date: "1965-03-15T00:00:00Z"        # Age 60 in 2025 - eligible for immediate FERS retirement
     hire_date: "1987-06-01T00:00:00Z"         # 38+ years federal service by 2025
     
@@ -54,10 +54,10 @@ personal_details:
     survivor_benefit_election_percent: 0.0   # DUMMY: No survivor benefit (100% pension)
 
   # ================================================================================================
-  # EMPLOYEE 2: "Dawn Gehrsitz" - FICTIONAL SPOUSE (REQUIRED NAME: "dawn")
+  # EMPLOYEE 2: "Person B" - FICTIONAL SPOUSE (REQUIRED NAME: "person_b")
   # ================================================================================================
-  dawn:
-    name: "Dawn Gehrsitz"
+  person_b:
+    name: "Person B"
     birth_date: "1968-09-22T00:00:00Z"        # Age 57 in 2025 - younger spouse
     hire_date: "1992-08-15T00:00:00Z"         # 33+ years federal service by 2025
     
@@ -255,15 +255,15 @@ scenarios:
   - name: "Early Retirement 2026 - Both Retire Together"
     description: "Both employees retire early at minimum retirement age"
     
-    robert:
-      employee_name: "robert"
-      retirement_date: "2026-06-01T00:00:00Z"          # Robert's 39th anniversary - eligible for immediate retirement
+    person_a:
+      employee_name: "person_a"
+  retirement_date: "2026-06-01T00:00:00Z"          # Person A's 39th anniversary - eligible for immediate retirement
       ss_start_age: 62                       # Claim SS at earliest age (reduced benefit)
       tsp_withdrawal_strategy: "4_percent_rule"  # Classic 4% withdrawal strategy
       
-    dawn:
-      employee_name: "dawn"  
-      retirement_date: "2026-08-15T00:00:00Z"          # Dawn's 34th anniversary - eligible for immediate retirement
+    person_b:
+      employee_name: "person_b"  
+  retirement_date: "2026-08-15T00:00:00Z"          # Person B's 34th anniversary - eligible for immediate retirement
       ss_start_age: 62                       # Claim SS at earliest age
       tsp_withdrawal_strategy: "4_percent_rule"
 
@@ -271,16 +271,16 @@ scenarios:
   - name: "Optimized Retirement 2028 - Delayed for Higher Benefits"
     description: "Strategic retirement timing to maximize benefits"
     
-    robert:
-      employee_name: "robert"
-      retirement_date: "2028-03-15T00:00:00Z"          # Robert retires at 63 for higher pension
+    person_a:
+      employee_name: "person_a"
+  retirement_date: "2028-03-15T00:00:00Z"          # Person A retires at 63 for higher pension
       ss_start_age: 67                       # Wait for Full Retirement Age (no reduction)
       tsp_withdrawal_strategy: "need_based"  # Withdraw only what's needed
       tsp_withdrawal_target_monthly: 4000    # $4,000/month target withdrawal
       
-    dawn:
-      employee_name: "dawn"
-      retirement_date: "2029-08-15T00:00:00Z"          # Dawn works one more year
+    person_b:
+      employee_name: "person_b"
+  retirement_date: "2029-08-15T00:00:00Z"          # Person B works one more year
       ss_start_age: 67                       # Wait for Full Retirement Age
       tsp_withdrawal_strategy: "need_based"
       tsp_withdrawal_target_monthly: 3500    # $3,500/month target withdrawal
@@ -289,17 +289,17 @@ scenarios:
   - name: "Maximum Benefit Strategy 2030 - Delayed SS Claims"
     description: "Work longer and delay SS claims for maximum lifetime benefits"
     
-    robert:
-      employee_name: "robert"
-      retirement_date: "2030-03-15T00:00:00Z"          # Robert works until 65
+    person_a:
+      employee_name: "person_a"
+  retirement_date: "2030-03-15T00:00:00Z"          # Person A works until 65
       ss_start_age: 70                       # Delay SS to age 70 for maximum benefit (132% of FRA)
       tsp_withdrawal_strategy: "need_based"
       tsp_withdrawal_target_monthly: 5000    # Higher withdrawal to bridge to SS
       
-    dawn:
-      employee_name: "dawn"
-      retirement_date: "2031-08-15T00:00:00Z"          # Dawn works until 63
-      ss_start_age: 67                       # Dawn claims at FRA (good balance)
+    person_b:
+      employee_name: "person_b"
+  retirement_date: "2031-08-15T00:00:00Z"          # Person B works until 63
+  ss_start_age: 67                       # Person B claims at FRA (good balance)
       tsp_withdrawal_strategy: "4_percent_rule"
 
 # ================================================================================================

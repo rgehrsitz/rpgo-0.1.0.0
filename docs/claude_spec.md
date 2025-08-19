@@ -15,7 +15,7 @@ This specification combines comprehensive research on Federal Employee Retiremen
 
 ## Recent Regulatory Changes Requiring Implementation
 
-**Critical 2025 Updates Affecting Federal Retirement Planning:**
+### Critical 2025 Updates Affecting Federal Retirement Planning
 
 **Social Security Fairness Act Implementation**: The January 2025 repeal of WEP/GPO affects 3.2 million beneficiaries with average increases of $7,300 annually. The calculator must remove previous Social Security reduction penalties for federal retirees.
 
@@ -25,13 +25,13 @@ This specification combines comprehensive research on Federal Employee Retiremen
 
 ## Input Data Structure and Configuration
 
-The calculator accepts structured JSON/YAML input enabling comprehensive scenario modeling:
+The calculator accepts structured JSON/YAML input enabling comprehensive scenario modeling.
 
 ### Personal Profile Structure
 
 ```yaml
 personal_details:
-  robert:
+    person_a:
     birth_date: "1963-06-15"
     hire_date: "1985-03-20"
     current_salary: 95000
@@ -43,7 +43,7 @@ personal_details:
     ss_benefit_62: 1680   # Monthly at age 62
     ss_benefit_70: 2976   # Monthly at age 70
   
-  dawn:
+    person_b:
     birth_date: "1965-08-22"
     hire_date: "1988-07-10"
     current_salary: 87000
@@ -78,42 +78,44 @@ global_assumptions:
 
 scenarios:
   - name: "Early Retirement 2025"
-    robert:
+    person_a:
       retirement_date: "2025-12-31"
       ss_start_age: 62
       tsp_withdrawal_strategy: "4_percent_rule"
-    dawn:
+    person_b:
       retirement_date: "2025-12-31"
       ss_start_age: 62
       tsp_withdrawal_strategy: "4_percent_rule"
   
-  - name: "Delayed Retirement 2028"
-    robert:
-      retirement_date: "2028-12-31"
-      ss_start_age: 67
-      tsp_withdrawal_strategy: "need_based"
-      tsp_withdrawal_target: 3000  # Monthly target until SS
-    dawn:
-      retirement_date: "2028-12-31"
-      ss_start_age: 62
-      tsp_withdrawal_strategy: "4_percent_rule"
+    - name: "Delayed Retirement 2028"
+        person_a:
+            retirement_date: "2028-12-31"
+            ss_start_age: 67
+            tsp_withdrawal_strategy: "need_based"
+            tsp_withdrawal_target: 3000  # Monthly target until SS
+        person_b:
+            retirement_date: "2028-12-31"
+            ss_start_age: 62
+            tsp_withdrawal_strategy: "4_percent_rule"
 ```
 
 ## Income Stream Calculations
 
 ### 1. FERS Pension (Annuity) Calculations
 
-**Core Pension Formula:**
-```
+#### Core Pension Formula
+
+```text
 Annual Pension = High-3 Average Salary × Years of Service × Multiplier
 ```
 
-**Multiplier Logic:**
+#### Multiplier Logic
+
 - Standard: 1.0% per year of service
 - Enhanced: 1.1% per year if retiring at age 62+ with 20+ years service
 - Implementation must check both age at retirement and years of service
 
-**Key Implementation Requirements:**
+#### Key Implementation Requirements
 
 ```go
 type PensionCalculation struct {
@@ -140,13 +142,15 @@ func CalculateFERSPension(employee Employee, retirementDate time.Time) PensionCa
 }
 ```
 
-**FERS Special Retirement Supplement (SRS):**
+#### FERS Special Retirement Supplement (SRS)
+
 - Applies if retiring before age 62 with immediate annuity
 - Formula: `SS_Benefit_at_62 × (FERS_Service_Years ÷ 40)`
 - Subject to earnings test after Minimum Retirement Age ($23,400 limit for 2025)
 - Terminates at age 62 regardless of SS claiming decision
 
-**FERS COLA Implementation:**
+#### FERS COLA Implementation
+
 ```go
 func ApplyFERSCOLA(pensionAmount decimal.Decimal, cpiIncrease decimal.Decimal, retireeAge int) decimal.Decimal {
     // FERS COLAs only apply after age 62
@@ -169,14 +173,15 @@ func ApplyFERSCOLA(pensionAmount decimal.Decimal, cpiIncrease decimal.Decimal, r
 
 ### 2. TSP Modeling with Historical Performance Integration
 
-**Historical Performance Data for Modeling:**
+#### Historical Data for Modeling
+
 - C Fund (S&P 500): Long-term average 12.29% (1988-2020), 2024 return 24.96%
 - F Fund (Bond Index): Long-term average 6.29%, 2024 return 1.33%
 - G Fund (Government Securities): Long-term average 4.7%, stable but low returns
 - S Fund (Small Cap): 2024 return 16.93%, higher volatility
 - I Fund (International): More volatile, requires careful modeling
 
-**Withdrawal Strategy Implementation:**
+#### Withdrawal Strategy Implementation
 
 ```go
 type TSPWithdrawalStrategy interface {
@@ -210,7 +215,7 @@ func (nbw *NeedBasedWithdrawal) CalculateWithdrawal(balance decimal.Decimal, yea
 }
 ```
 
-**Required Minimum Distribution Compliance:**
+#### Required Minimum Distribution Compliance
 
 ```go
 type RMDCalculator struct {
@@ -247,7 +252,7 @@ func (rmd *RMDCalculator) CalculateRMD(traditionalBalance decimal.Decimal, age i
 }
 ```
 
-**TSP Growth and Balance Tracking:**
+#### TSP Growth and Balance Tracking
 
 ```go
 type TSPProjection struct {
@@ -293,10 +298,11 @@ func ProjectTSP(initialBalance decimal.Decimal, strategy TSPWithdrawalStrategy, 
 
 ### 3. Social Security Optimization with 2025 Updates
 
-**Post-WEP/GPO Repeal Benefits:**
+#### Post-WEP/GPO Repeal Benefits
+
 With the 2025 Social Security Fairness Act, federal employees no longer face benefit reductions. The calculator must implement full Social Security benefits without WEP/GPO penalties.
 
-**Benefit Calculation by Claiming Age:**
+#### Benefit Calculation by Claiming Age
 
 ```go
 type SocialSecurityCalculator struct {
@@ -344,7 +350,7 @@ func (ssc *SocialSecurityCalculator) CalculateBenefitAtAge(claimingAge int) deci
 }
 ```
 
-**Social Security Taxation (Critical for Net Income Calculation):**
+#### Social Security Taxation (Critical for Net Income Calculation)
 
 ```go
 type SSTaxCalculator struct{}
@@ -385,7 +391,7 @@ func (sstc *SSTaxCalculator) CalculateTaxablePortion(ssAmount decimal.Decimal, o
 
 ### 4. Comprehensive Tax Modeling
 
-**Federal Income Tax Implementation:**
+#### Federal Income Tax Implementation
 
 ```go
 type TaxBracket struct {
@@ -450,7 +456,7 @@ func (ftc *FederalTaxCalculator) CalculateTax(grossIncome decimal.Decimal, age1,
 }
 ```
 
-**Pennsylvania State Tax (Critical Retirement Benefit):**
+#### Pennsylvania State Tax (Critical Retirement Benefit)
 
 ```go
 type PennsylvaniaTaxCalculator struct{}
@@ -469,7 +475,7 @@ func (ptc *PennsylvaniaTaxCalculator) CalculateTax(income TaxableIncome, isRetir
 }
 ```
 
-**Upper Makefield Township Local Tax:**
+#### Upper Makefield Township Local Tax
 
 ```go
 type UpperMakefieldEITCalculator struct{}
@@ -484,7 +490,7 @@ func (ume *UpperMakefieldEITCalculator) CalculateEIT(wageIncome decimal.Decimal,
 }
 ```
 
-**FICA Calculations (Current Employment Only):**
+#### FICA Calculations (Current Employment Only)
 
 ```go
 type FICACalculator struct {
@@ -529,7 +535,7 @@ func (fc *FICACalculator) CalculateFICA(wages decimal.Decimal, totalHouseholdWag
 
 ### 5. Healthcare Cost Modeling (FEHB/Medicare Integration)
 
-**FEHB Premium Calculations in Retirement:**
+#### FEHB Premium Calculations in Retirement
 
 ```go
 type FEHBCalculator struct {
@@ -557,7 +563,7 @@ func (fehb *FEHBCalculator) CalculateRetirementCost(year int, isMedicare bool) d
 }
 ```
 
-**Medicare Integration at Age 65:**
+#### Medicare Integration at Age 65
 
 ```go
 type MedicareCalculator struct {
@@ -588,7 +594,7 @@ func (mc *MedicareCalculator) CalculatePartBCost(modifiedAGI decimal.Decimal, fi
 
 ### 6. Monte Carlo Simulation Implementation
 
-**Historical Data Integration:**
+#### Historical Data Integration
 
 ```go
 type HistoricalData struct {
@@ -659,21 +665,21 @@ func (mcs *MonteCarloSimulator) runSingleSimulation() SimulationOutcome {
 
 ### 7. Output and Visualization Framework
 
-**Comprehensive Annual Cash Flow Table:**
+#### Comprehensive Annual Cash Flow Table
 
 ```go
 type AnnualCashFlow struct {
     Year                int
     Age1                int
     Age2                int
-    PensionRobert       decimal.Decimal
-    PensionDawn         decimal.Decimal
-    TSPWithdrawalRobert decimal.Decimal
-    TSPWithdrawalDawn   decimal.Decimal
-    SSBenefitRobert     decimal.Decimal
-    SSBenefitDawn       decimal.Decimal
-    FERSSupplementRobert decimal.Decimal
-    FERSSupplementDawn  decimal.Decimal
+    PensionPersonA       decimal.Decimal
+    PensionPersonB       decimal.Decimal
+    TSPWithdrawalPersonA decimal.Decimal
+    TSPWithdrawalPersonB decimal.Decimal
+    SSBenefitPersonA     decimal.Decimal
+    SSBenefitPersonB     decimal.Decimal
+    FERSSupplementPersonA decimal.Decimal
+    FERSSupplementPersonB  decimal.Decimal
     TotalGrossIncome    decimal.Decimal
     FederalTax          decimal.Decimal
     StateTax            decimal.Decimal
@@ -681,8 +687,8 @@ type AnnualCashFlow struct {
     FEHBPremium         decimal.Decimal
     MedicarePremium     decimal.Decimal
     NetIncome           decimal.Decimal
-    TSPBalanceRobert    decimal.Decimal
-    TSPBalanceDawn      decimal.Decimal
+    TSPBalancePersonA    decimal.Decimal
+    TSPBalancePersonB    decimal.Decimal
 }
 
 func GenerateAnnualProjection(scenario RetirementScenario, years int) []AnnualCashFlow {
@@ -692,14 +698,14 @@ func GenerateAnnualProjection(scenario RetirementScenario, years int) []AnnualCa
         cf := AnnualCashFlow{Year: year}
         
         // Calculate each income component
-        cf.PensionRobert = calculatePensionForYear(scenario.Robert, year)
-        cf.PensionDawn = calculatePensionForYear(scenario.Dawn, year)
+    cf.PensionPersonA = calculatePensionForYear(scenario.PersonA, year)
+    cf.PensionPersonB = calculatePensionForYear(scenario.PersonB, year)
         
         // ... (implement other calculations)
         
         // Calculate net income
-        totalGross := cf.PensionRobert.Add(cf.PensionDawn).Add(cf.TSPWithdrawalRobert).
-                     Add(cf.TSPWithdrawalDawn).Add(cf.SSBenefitRobert).Add(cf.SSBenefitDawn)
+    totalGross := cf.PensionPersonA.Add(cf.PensionPersonB).Add(cf.TSPWithdrawalPersonA).
+             Add(cf.TSPWithdrawalPersonB).Add(cf.SSBenefitPersonA).Add(cf.SSBenefitPersonB)
         
         cf.TotalGrossIncome = totalGross
         
@@ -718,7 +724,7 @@ func GenerateAnnualProjection(scenario RetirementScenario, years int) []AnnualCa
 }
 ```
 
-**Scenario Comparison and Summary:**
+#### Scenario Comparison and Summary
 
 ```go
 type ScenarioComparison struct {
@@ -769,7 +775,7 @@ func GenerateScenarioComparison(baseline AnnualCashFlow, scenarios []RetirementS
         
         // Determine TSP longevity
         for j, year := range projection {
-            if year.TSPBalanceRobert.Add(year.TSPBalanceDawn).LessThanOrEqual(decimal.Zero) {
+        if year.TSPBalancePersonA.Add(year.TSPBalancePersonB).LessThanOrEqual(decimal.Zero) {
                 summary.TSPLongevity = j + 1
                 break
             }
@@ -790,9 +796,9 @@ func GenerateScenarioComparison(baseline AnnualCashFlow, scenarios []RetirementS
 
 ### 8. Go-Specific Implementation Architecture
 
-**Recommended Project Structure:**
+#### Recommended Project Structure
 
-```
+```text
 fers-retirement-calculator/
 ├── cmd/
 │   └── cli/
@@ -833,7 +839,7 @@ fers-retirement-calculator/
     └── calculations/              # Calculation documentation
 ```
 
-**Core Dependencies:**
+#### Core Dependencies
 
 ```go
 // go.mod
@@ -851,7 +857,7 @@ require (
 )
 ```
 
-**Financial Precision Implementation:**
+#### Financial Precision Implementation
 
 ```go
 package decimal
@@ -889,7 +895,7 @@ func (m Money) ApplyTaxRate(rate decimal.Decimal) Money {
 }
 ```
 
-**CLI Interface Design:**
+#### CLI Interface Design
 
 ```go
 package main
@@ -942,7 +948,7 @@ func init() {
 
 ### 9. Testing Strategy and Validation
 
-**Comprehensive Test Coverage:**
+#### Comprehensive Test Coverage
 
 ```go
 package calculation_test
@@ -1018,7 +1024,7 @@ func TestCompleteScenarioCalculation(t *testing.T) {
 }
 ```
 
-**Performance Benchmarking:**
+#### Performance Benchmarking
 
 ```go
 func BenchmarkMonteCarloSimulation(b *testing.B) {
@@ -1047,33 +1053,38 @@ func BenchmarkTSPProjection(b *testing.B) {
 
 ### 10. Development Roadmap and Implementation Phases
 
-**Phase 1: Core Calculations (4-6 weeks)**
+#### Phase 1: Core Calculations (4-6 weeks)
+
 - Implement basic FERS pension calculations with all multiplier rules
 - Build TSP withdrawal strategies and balance tracking
 - Create Social Security benefit calculations with WEP/GPO removal
 - Implement federal tax calculations with 2025 brackets
 - Add Pennsylvania and local tax rules
 
-**Phase 2: Advanced Features (3-4 weeks)**
+#### Phase 2: Advanced Features (3-4 weeks)
+
 - Implement FERS COLA rules and application logic
 - Add RMD calculations and compliance checking
 - Build FEHB premium tracking and Medicare integration
 - Create scenario comparison and analysis tools
 - Add comprehensive input validation
 
-**Phase 3: Output and Visualization (2-3 weeks)**
+#### Phase 3: Output and Visualization (2-3 weeks)
+
 - Build CLI interface with flexible output options
 - Create HTML report generation with embedded charts
 - Implement CSV export for external analysis
 - Add summary statistics and key insights generation
 
-**Phase 4: Monte Carlo and Advanced Analysis (3-4 weeks)**
+#### Phase 4: Monte Carlo and Advanced Analysis (3-4 weeks)
+
 - Integrate historical market data (TSP funds, inflation, interest rates)
 - Implement Monte Carlo simulation engine
 - Add portfolio longevity analysis and success rate calculations
 - Create sensitivity analysis for key parameters
 
-**Phase 5: Testing and Documentation (2-3 weeks)**
+#### Phase 5: Testing and Documentation (2-3 weeks)
+
 - Comprehensive unit test coverage (target 80%+)
 - Integration testing with real-world scenarios
 - Performance optimization for large simulations
@@ -1081,21 +1092,24 @@ func BenchmarkTSPProjection(b *testing.B) {
 
 ### Implementation Best Practices
 
-**Code Quality Guidelines:**
+#### Code Quality Guidelines
+
 - Use table-driven tests for all financial calculations
 - Implement comprehensive logging for debugging complex scenarios
 - Include extensive comments explaining financial calculation rationale
 - Use dependency injection for testability
 - Implement circuit breakers for external data sources
 
-**Financial Calculation Standards:**
+#### Financial Calculation Standards
+
 - Always use banker's rounding for monetary calculations
 - Round final results to cents, maintain precision during calculations
 - Validate all input ranges and handle edge cases
 - Include calculation audit trails for transparency
 - Cross-reference calculations with authoritative sources
 
-**Data Management:**
+#### Data Management
+
 - Store historical data in versioned files with source attribution
 - Implement data validation and outlier detection
 - Provide fallback defaults for missing historical data

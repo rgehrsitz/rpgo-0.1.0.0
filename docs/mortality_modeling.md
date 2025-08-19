@@ -8,13 +8,13 @@ Within each scenario you may add an optional `mortality` block:
 
 ```yaml
 scenarios:
-  - name: "Mortality Shock: Robert dies 2034"
-    robert: { ... }
-    dawn: { ... }
+  - name: "Mortality Shock: Person A dies 2034"
+  person_a: { ... }
+  person_b: { ... }
     mortality:
-      robert:
+  person_a:
         death_date: "2034-06-30T00:00:00Z"  # OR use death_age: 79
-      dawn:
+  person_b:
         # optional
       assumptions:
         survivor_spending_factor: "0.90"    # Scale pensions & withdrawals post-first death (0.4-1.0 allowed)
@@ -49,9 +49,10 @@ You can specify either `death_date` (UTC timestamp) or `death_age` (integer) for
 Golden snapshots updated to reflect structural changes. Add targeted mortality unit tests in `internal/calculation` or `internal/output` (planned next).
 
 ## Example Snippet (Age-Based Death)
+
 ```yaml
 mortality:
-  dawn:
+  person_b:
     death_age: 88
   assumptions:
     survivor_spending_factor: "0.85"

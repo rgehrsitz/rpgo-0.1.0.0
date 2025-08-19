@@ -49,13 +49,17 @@ personal_details:
 ## Impact on Results
 
 ### With Manual Allocations (Correct)
+
 Monte Carlo HTML reports show proper TSP balance variation:
+
 - **P10**: $2,849 (worst case)
 - **P50**: $51,057,439 (median)  
 - **P90**: $3,562,192,530 (best case)
 
 ### With Lifecycle Funds (Incorrect)
+
 Monte Carlo HTML reports show identical TSP values:
+
 - **P10**: $10,289,593
 - **P25**: $10,289,593
 - **P50**: $10,289,593
@@ -65,12 +69,14 @@ Monte Carlo HTML reports show identical TSP values:
 ## Deterministic Calculations
 
 For **regular deterministic calculations** (not Monte Carlo), both approaches work equivalently:
+
 - Use either manual allocations or lifecycle funds
 - Both will produce the same results for single-scenario projections
 
 ## Recommended TSP Allocations
 
 ### Conservative (Age 55+)
+
 ```yaml
 tsp_allocation:
   c_fund: "0.30"  # 30% stocks
@@ -81,6 +87,7 @@ tsp_allocation:
 ```
 
 ### Moderate (Age 45-55)
+
 ```yaml
 tsp_allocation:
   c_fund: "0.50"  # 50% stocks
@@ -91,6 +98,7 @@ tsp_allocation:
 ```
 
 ### Aggressive (Age <45)
+
 ```yaml
 tsp_allocation:
   c_fund: "0.60"  # 70% stocks total
@@ -112,16 +120,18 @@ If you have an existing configuration with lifecycle funds and want to run Monte
 ## Example Migration
 
 **Before (Lifecycle Fund)**:
+
 ```yaml
-robert:
+person_a:
   # ... other details
   tsp_lifecycle_fund:
     fund_name: "L2030"
 ```
 
 **After (Manual Allocation)**:
+
 ```yaml
-robert:
+person_a:
   # ... other details
   tsp_allocation:
     c_fund: "0.55"  # Approximate L2030 allocation
@@ -143,6 +153,7 @@ To verify your Monte Carlo simulation is working correctly:
 ## Future Improvements
 
 This limitation may be addressed in future versions by:
+
 - Making lifecycle fund allocations responsive to Monte Carlo market conditions
 - Providing hybrid approaches that combine lifecycle fund strategies with market variability
 - Adding validation warnings when lifecycle funds are used with Monte Carlo simulations

@@ -9,16 +9,16 @@ import (
 
 // CalculateBreakEvenTSPWithdrawalRate calculates the TSP withdrawal percentage needed to match current net income
 func (ce *CalculationEngine) CalculateBreakEvenTSPWithdrawalRate(config *domain.Configuration, scenario *domain.Scenario, targetNetIncome decimal.Decimal) (decimal.Decimal, *domain.AnnualCashFlow, error) {
-	robertEmployee := config.PersonalDetails["robert"]
-	dawnEmployee := config.PersonalDetails["dawn"]
+	personAEmployee := config.PersonalDetails["person_a"]
+	personBEmployee := config.PersonalDetails["person_b"]
 
 	// Find the first year when both are fully retired
 	projectionStartYear := ProjectionBaseYear
-	robertRetirementYear := scenario.Robert.RetirementDate.Year() - projectionStartYear
-	dawnRetirementYear := scenario.Dawn.RetirementDate.Year() - projectionStartYear
-	firstFullRetirementYear := robertRetirementYear
-	if dawnRetirementYear > robertRetirementYear {
-		firstFullRetirementYear = dawnRetirementYear
+	personARetirementYear := scenario.PersonA.RetirementDate.Year() - projectionStartYear
+	personBRetirementYear := scenario.PersonB.RetirementDate.Year() - projectionStartYear
+	firstFullRetirementYear := personARetirementYear
+	if personBRetirementYear > personARetirementYear {
+		firstFullRetirementYear = personBRetirementYear
 	}
 	// Add 1 to get the first FULL year after both are retired
 	firstFullRetirementYear++
@@ -35,13 +35,13 @@ func (ce *CalculationEngine) CalculateBreakEvenTSPWithdrawalRate(config *domain.
 
 		// Create a test scenario with this withdrawal rate
 		testScenario := *scenario
-		testScenario.Robert.TSPWithdrawalStrategy = "variable_percentage"
-		testScenario.Robert.TSPWithdrawalRate = &testRate
-		testScenario.Dawn.TSPWithdrawalStrategy = "variable_percentage"
-		testScenario.Dawn.TSPWithdrawalRate = &testRate
+		testScenario.PersonA.TSPWithdrawalStrategy = "variable_percentage"
+		testScenario.PersonA.TSPWithdrawalRate = &testRate
+		testScenario.PersonB.TSPWithdrawalStrategy = "variable_percentage"
+		testScenario.PersonB.TSPWithdrawalRate = &testRate
 
 		// Run projection to get the first full retirement year
-		projection := ce.GenerateAnnualProjection(&robertEmployee, &dawnEmployee, &testScenario, &config.GlobalAssumptions, config.GlobalAssumptions.FederalRules)
+		projection := ce.GenerateAnnualProjection(&personAEmployee, &personBEmployee, &testScenario, &config.GlobalAssumptions, config.GlobalAssumptions.FederalRules)
 
 		// Check if we have enough projection years
 		if firstFullRetirementYear >= len(projection) {
@@ -74,12 +74,12 @@ func (ce *CalculationEngine) CalculateBreakEvenTSPWithdrawalRate(config *domain.
 	// Return the best rate found
 	finalRate := minRate.Add(maxRate).Div(decimal.NewFromInt(2))
 	testScenario := *scenario
-	testScenario.Robert.TSPWithdrawalStrategy = "variable_percentage"
-	testScenario.Robert.TSPWithdrawalRate = &finalRate
-	testScenario.Dawn.TSPWithdrawalStrategy = "variable_percentage"
-	testScenario.Dawn.TSPWithdrawalRate = &finalRate
+	testScenario.PersonA.TSPWithdrawalStrategy = "variable_percentage"
+	testScenario.PersonA.TSPWithdrawalRate = &finalRate
+	testScenario.PersonB.TSPWithdrawalStrategy = "variable_percentage"
+	testScenario.PersonB.TSPWithdrawalRate = &finalRate
 
-	projection := ce.GenerateAnnualProjection(&robertEmployee, &dawnEmployee, &testScenario, &config.GlobalAssumptions, config.GlobalAssumptions.FederalRules)
+	projection := ce.GenerateAnnualProjection(&personAEmployee, &personBEmployee, &testScenario, &config.GlobalAssumptions, config.GlobalAssumptions.FederalRules)
 	finalYear := projection[firstFullRetirementYear]
 
 	return finalRate, &finalYear, nil
@@ -88,9 +88,9 @@ func (ce *CalculationEngine) CalculateBreakEvenTSPWithdrawalRate(config *domain.
 // CalculateBreakEvenAnalysis calculates break-even TSP withdrawal rates for all scenarios
 func (ce *CalculationEngine) CalculateBreakEvenAnalysis(config *domain.Configuration) (*BreakEvenAnalysis, error) {
 	// Calculate current net income as the target
-	robertEmployee := config.PersonalDetails["robert"]
-	dawnEmployee := config.PersonalDetails["dawn"]
-	targetNetIncome := ce.NetIncomeCalc.Calculate(&robertEmployee, &dawnEmployee, ce.Debug)
+	personAEmployee := config.PersonalDetails["person_a"]
+	personBEmployee := config.PersonalDetails["person_b"]
+	targetNetIncome := ce.NetIncomeCalc.Calculate(&personAEmployee, &personBEmployee, ce.Debug)
 
 	results := make([]BreakEvenResult, len(config.Scenarios))
 
@@ -105,7 +105,7 @@ func (ce *CalculationEngine) CalculateBreakEvenAnalysis(config *domain.Configura
 			BreakEvenWithdrawalRate: rate,
 			ProjectedNetIncome:      yearData.NetIncome,
 			ProjectedYear:           yearData.Year + (ProjectionBaseYear - 1),
-			TSPWithdrawalAmount:     yearData.TSPWithdrawalRobert.Add(yearData.TSPWithdrawalDawn),
+			TSPWithdrawalAmount:     yearData.TSPWithdrawalPersonA.Add(yearData.TSPWithdrawalPersonB),
 			TotalTSPBalance:         yearData.TotalTSPBalance(),
 			CurrentVsBreakEvenDiff:  yearData.NetIncome.Sub(targetNetIncome),
 		}

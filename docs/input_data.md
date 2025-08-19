@@ -1,12 +1,12 @@
-Below are consolidated summaries for Robert and Dawn, formatted in Markdown with the key data points you’ll need to feed into your retirement planner.  Each section pulls from their LES, W-2, TSP, and Social Security Statement documents.
+# Below are consolidated summaries for PersonA and PersonB, formatted in Markdown with the key data points you’ll need to feed into your retirement planner.  Each section pulls from their LES, W-2, TSP, and Social Security Statement documents
 
 ---
 
-## Robert F. Gehrsitz
+## Person A
 
-### Personal & Employment
+### Personal & Employment - Person A
 
-* **Name:** Robert F. Gehrsitz
+* **Name:** Person A
 * **SSN (last 4):** 5061
 * **Pay Plan/Grade:** NM-05
 * **Adjusted Basic Pay (annual):** \$190,779
@@ -34,7 +34,7 @@ Below are consolidated summaries for Robert and Dawn, formatted in Markdown with
   * FERS Retirement (employer share): \$18,779.24
   * FEHB Premiums: \$6,459.66&#x20;
 
-### 2024 W-2 Summary
+### 2024 W-2 Summary - Person B
 
 * **Box 1 (Wages, Tips, Other Comp):** \$189,991.10
 * **Box 2 (Federal Income Tax Withheld):** \$33,732.47
@@ -74,11 +74,11 @@ Below are consolidated summaries for Robert and Dawn, formatted in Markdown with
 
 ---
 
-## Dawn M. Gehrsitz
+## Person B
 
-### Personal & Employment
+### Personal & Employment - Person B
 
-* **Name:** Dawn M. Gehrsitz
+* **Name:** Person B
 * **SSN (last 4):** 0570
 * **Pay Plan/Grade:** NM-04
 * **Adjusted Basic Pay (annual):** \$176,620

@@ -17,63 +17,43 @@ func TestNewInputParser(t *testing.T) {
 }
 
 func TestLoadFromFile_Success(t *testing.T) {
-	// Create a temporary test file
-	testConfig := `
-personal_details:
-  robert:
-    name: "Robert"
-    birth_date: "1963-06-15T00:00:00Z"
-    hire_date: "1985-03-20T00:00:00Z"
-    current_salary: 95000
-    high_3_salary: 93000
-    tsp_balance_traditional: 450000
-    tsp_balance_roth: 50000
-    tsp_contribution_percent: 0.15
-    ss_benefit_fra: 2400
-    ss_benefit_62: 1680
-    ss_benefit_70: 2976
-    fehb_premium_per_pay_period: 488
-    survivor_benefit_election_percent: 0.25
-  dawn:
-    name: "Dawn"
-    birth_date: "1965-08-22T00:00:00Z"
-    hire_date: "1988-07-10T00:00:00Z"
-    current_salary: 85000
-    high_3_salary: 83000
-    tsp_balance_traditional: 350000
-    tsp_balance_roth: 40000
-    tsp_contribution_percent: 0.15
-    ss_benefit_fra: 2000
-    ss_benefit_62: 1400
-    ss_benefit_70: 2480
-    fehb_premium_per_pay_period: 400
-    survivor_benefit_election_percent: 0.25
-
-global_assumptions:
-  inflation_rate: 0.025
-  fehb_premium_inflation: 0.04
-  tsp_return_pre_retirement: 0.07
-  tsp_return_post_retirement: 0.05
-  cola_general_rate: 0.02
-  projection_years: 30
-  current_location:
-    state: "PA"
-    county: "Bucks"
-    municipality: "Upper Makefield"
-
-scenarios:
-  - name: "Standard Retirement"
-    robert:
-      employee_name: "robert"
-      retirement_date: "2025-12-31T00:00:00Z"
-      ss_start_age: 67
-      tsp_withdrawal_strategy: "4_percent_rule"
-    dawn:
-      employee_name: "dawn"
-      retirement_date: "2025-12-31T00:00:00Z"
-      ss_start_age: 67
-      tsp_withdrawal_strategy: "4_percent_rule"
-`
+	// Create a temporary test file with minimal, well-formed YAML (spaces only)
+	testConfig := "personal_details:\n" +
+		"  person_a:\n" +
+		"    name: \"PersonA\"\n" +
+		"    birth_date: \"1963-06-15T00:00:00Z\"\n" +
+		"    hire_date: \"1985-03-20T00:00:00Z\"\n" +
+		"    current_salary: 95000\n" +
+		"    ss_benefit_62: 1680\n" +
+		"    ss_benefit_fra: 2400\n" +
+		"    ss_benefit_70: 2976\n" +
+		"    high_3_salary: 93000\n" +
+		"  person_b:\n" +
+		"    name: \"PersonB\"\n" +
+		"    birth_date: \"1965-08-22T00:00:00Z\"\n" +
+		"    hire_date: \"1988-07-10T00:00:00Z\"\n" +
+		"    current_salary: 85000\n" +
+		"    ss_benefit_62: 1400\n" +
+		"    ss_benefit_fra: 2000\n" +
+		"    ss_benefit_70: 2480\n" +
+		"    high_3_salary: 83000\n\n" +
+		"global_assumptions:\n" +
+		"  inflation_rate: 0.025\n" +
+		"  projection_years: 30\n" +
+		"  current_location:\n" +
+		"    state: \"PA\"\n\n" +
+		"scenarios:\n" +
+		"  - name: \"Standard Retirement\"\n" +
+		"    person_a:\n" +
+		"      employee_name: \"person_a\"\n" +
+		"      retirement_date: \"2025-12-31T00:00:00Z\"\n" +
+		"      ss_start_age: 67\n" +
+		"      tsp_withdrawal_strategy: \"4_percent_rule\"\n" +
+		"    person_b:\n" +
+		"      employee_name: \"person_b\"\n" +
+		"      retirement_date: \"2025-12-31T00:00:00Z\"\n" +
+		"      ss_start_age: 67\n" +
+		"      tsp_withdrawal_strategy: \"4_percent_rule\"\n"
 
 	tmpfile, err := os.CreateTemp("", "test_config_*.yaml")
 	require.NoError(t, err)
@@ -89,8 +69,8 @@ scenarios:
 	require.NoError(t, err)
 	assert.NotNil(t, config)
 	assert.Len(t, config.PersonalDetails, 2)
-	assert.Contains(t, config.PersonalDetails, "robert")
-	assert.Contains(t, config.PersonalDetails, "dawn")
+	assert.Contains(t, config.PersonalDetails, "person_a")
+	assert.Contains(t, config.PersonalDetails, "person_b")
 	assert.Len(t, config.Scenarios, 1)
 }
 
@@ -107,10 +87,10 @@ func TestLoadFromFile_InvalidYAML(t *testing.T) {
 	// Create a temporary test file with invalid YAML
 	testConfig := `
 personal_details:
-  robert:
-    name: "Robert"
-    birth_date: "invalid-date"
-    current_salary: "not-a-number"
+	person_a:
+		name: "PersonA"
+		birth_date: "invalid-date"
+		current_salary: "not-a-number"
 `
 
 	tmpfile, err := os.CreateTemp("", "test_config_*.yaml")
@@ -149,40 +129,40 @@ func TestValidateConfiguration_NoPersonalDetails(t *testing.T) {
 	assert.Contains(t, err.Error(), "no personal details provided")
 }
 
-func TestValidateConfiguration_MissingRobert(t *testing.T) {
+func TestValidateConfiguration_MissingPersonA(t *testing.T) {
 	parser := NewInputParser()
 	config := &domain.Configuration{
 		PersonalDetails: map[string]domain.Employee{
-			"dawn": createValidEmployee("Dawn", "1965-08-22", "1988-07-10"),
+			"person_b": createValidEmployee("person_b", "1965-08-22", "1988-07-10"),
 		},
 		Scenarios: []domain.Scenario{},
 	}
 
 	err := parser.ValidateConfiguration(config)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "robert employee details are required")
+	assert.Contains(t, err.Error(), "person_a employee details are required")
 }
 
-func TestValidateConfiguration_MissingDawn(t *testing.T) {
+func TestValidateConfiguration_MissingPersonB(t *testing.T) {
 	parser := NewInputParser()
 	config := &domain.Configuration{
 		PersonalDetails: map[string]domain.Employee{
-			"robert": createValidEmployee("Robert", "1963-06-15", "1985-03-20"),
+			"person_a": createValidEmployee("person_a", "1963-06-15", "1985-03-20"),
 		},
 		Scenarios: []domain.Scenario{},
 	}
 
 	err := parser.ValidateConfiguration(config)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "dawn employee details are required")
+	assert.Contains(t, err.Error(), "person_b employee details are required")
 }
 
 func TestValidateConfiguration_NoScenarios(t *testing.T) {
 	parser := NewInputParser()
 	config := &domain.Configuration{
 		PersonalDetails: map[string]domain.Employee{
-			"robert": createValidEmployee("Robert", "1963-06-15", "1985-03-20"),
-			"dawn":   createValidEmployee("Dawn", "1965-08-22", "1988-07-10"),
+			"person_a": createValidEmployee("person_a", "1963-06-15", "1985-03-20"),
+			"person_b": createValidEmployee("person_b", "1965-08-22", "1988-07-10"),
 		},
 		GlobalAssumptions: domain.GlobalAssumptions{
 			InflationRate:           decimal.NewFromFloat(0.025),
@@ -207,58 +187,58 @@ func TestValidateConfiguration_NoScenarios(t *testing.T) {
 
 func TestValidateEmployee_Success(t *testing.T) {
 	parser := NewInputParser()
-	employee := createValidEmployee("Robert", "1963-06-15", "1985-03-20")
+	employee := createValidEmployee("person_a", "1963-06-15", "1985-03-20")
 
-	err := parser.validateEmployee("robert", &employee)
+	err := parser.validateEmployee("person_a", &employee)
 	assert.NoError(t, err)
 }
 
 func TestValidateEmployee_ZeroBirthDate(t *testing.T) {
 	parser := NewInputParser()
-	employee := createValidEmployee("Robert", "1963-06-15", "1985-03-20")
+	employee := createValidEmployee("person_a", "1963-06-15", "1985-03-20")
 	employee.BirthDate = time.Time{}
 
-	err := parser.validateEmployee("robert", &employee)
+	err := parser.validateEmployee("person_a", &employee)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "birth date is required")
 }
 
 func TestValidateEmployee_ZeroHireDate(t *testing.T) {
 	parser := NewInputParser()
-	employee := createValidEmployee("Robert", "1963-06-15", "1985-03-20")
+	employee := createValidEmployee("person_a", "1963-06-15", "1985-03-20")
 	employee.HireDate = time.Time{}
 
-	err := parser.validateEmployee("robert", &employee)
+	err := parser.validateEmployee("person_a", &employee)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "hire date is required")
 }
 
 func TestValidateEmployee_ZeroSalary(t *testing.T) {
 	parser := NewInputParser()
-	employee := createValidEmployee("Robert", "1963-06-15", "1985-03-20")
+	employee := createValidEmployee("person_a", "1963-06-15", "1985-03-20")
 	employee.CurrentSalary = decimal.Zero
 
-	err := parser.validateEmployee("robert", &employee)
+	err := parser.validateEmployee("person_a", &employee)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "current salary must be positive")
 }
 
 func TestValidateEmployee_NegativeSalary(t *testing.T) {
 	parser := NewInputParser()
-	employee := createValidEmployee("Robert", "1963-06-15", "1985-03-20")
+	employee := createValidEmployee("person_a", "1963-06-15", "1985-03-20")
 	employee.CurrentSalary = decimal.NewFromInt(-1000)
 
-	err := parser.validateEmployee("robert", &employee)
+	err := parser.validateEmployee("person_a", &employee)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "current salary must be positive")
 }
 
 func TestValidateEmployee_NegativeTSPBalance(t *testing.T) {
 	parser := NewInputParser()
-	employee := createValidEmployee("Robert", "1963-06-15", "1985-03-20")
+	employee := createValidEmployee("PersonA", "1963-06-15", "1985-03-20")
 	employee.TSPBalanceTraditional = decimal.NewFromInt(-1000)
 
-	err := parser.validateEmployee("robert", &employee)
+	err := parser.validateEmployee("person_a", &employee)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "TSP traditional balance cannot be negative")
 }
@@ -356,14 +336,14 @@ func TestValidateScenario_Success(t *testing.T) {
 	parser := NewInputParser()
 	scenario := domain.Scenario{
 		Name: "Test Scenario",
-		Robert: domain.RetirementScenario{
-			EmployeeName:          "robert",
+		PersonA: domain.RetirementScenario{
+			EmployeeName:          "person_a",
 			RetirementDate:        time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
 			SSStartAge:            67,
 			TSPWithdrawalStrategy: "4_percent_rule",
 		},
-		Dawn: domain.RetirementScenario{
-			EmployeeName:          "dawn",
+		PersonB: domain.RetirementScenario{
+			EmployeeName:          "person_b",
 			RetirementDate:        time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
 			SSStartAge:            67,
 			TSPWithdrawalStrategy: "4_percent_rule",
@@ -388,13 +368,13 @@ func TestValidateScenario_EmptyName(t *testing.T) {
 func TestValidateRetirementScenario_Success(t *testing.T) {
 	parser := NewInputParser()
 	scenario := domain.RetirementScenario{
-		EmployeeName:          "robert",
+		EmployeeName:          "person_a",
 		RetirementDate:        time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
 		SSStartAge:            67,
 		TSPWithdrawalStrategy: "4_percent_rule",
 	}
 
-	err := parser.validateRetirementScenario("robert", &scenario)
+	err := parser.validateRetirementScenario("person_a", &scenario)
 	assert.NoError(t, err)
 }
 
@@ -404,7 +384,7 @@ func TestValidateRetirementScenario_EmptyEmployeeName(t *testing.T) {
 		EmployeeName: "",
 	}
 
-	err := parser.validateRetirementScenario("robert", &scenario)
+	err := parser.validateRetirementScenario("person_a", &scenario)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "employee name is required")
 }
@@ -412,11 +392,11 @@ func TestValidateRetirementScenario_EmptyEmployeeName(t *testing.T) {
 func TestValidateRetirementScenario_ZeroRetirementDate(t *testing.T) {
 	parser := NewInputParser()
 	scenario := domain.RetirementScenario{
-		EmployeeName:   "robert",
+		EmployeeName:   "person_a",
 		RetirementDate: time.Time{},
 	}
 
-	err := parser.validateRetirementScenario("robert", &scenario)
+	err := parser.validateRetirementScenario("person_a", &scenario)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "retirement date is required")
 }
@@ -424,17 +404,17 @@ func TestValidateRetirementScenario_ZeroRetirementDate(t *testing.T) {
 func TestValidateRetirementScenario_InvalidSSStartAge(t *testing.T) {
 	parser := NewInputParser()
 	scenario := domain.RetirementScenario{
-		EmployeeName:   "robert",
+		EmployeeName:   "person_a",
 		RetirementDate: time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
 		SSStartAge:     60, // Too young
 	}
 
-	err := parser.validateRetirementScenario("robert", &scenario)
+	err := parser.validateRetirementScenario("person_a", &scenario)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "social security start age must be between 62 and 70")
 
 	scenario.SSStartAge = 75 // Too old
-	err = parser.validateRetirementScenario("robert", &scenario)
+	err = parser.validateRetirementScenario("person_a", &scenario)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "social security start age must be between 62 and 70")
 }
@@ -442,13 +422,13 @@ func TestValidateRetirementScenario_InvalidSSStartAge(t *testing.T) {
 func TestValidateRetirementScenario_InvalidTSPStrategy(t *testing.T) {
 	parser := NewInputParser()
 	scenario := domain.RetirementScenario{
-		EmployeeName:          "robert",
+		EmployeeName:          "person_a",
 		RetirementDate:        time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
 		SSStartAge:            67,
 		TSPWithdrawalStrategy: "invalid_strategy",
 	}
 
-	err := parser.validateRetirementScenario("robert", &scenario)
+	err := parser.validateRetirementScenario("person_a", &scenario)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "TSP withdrawal strategy must be")
 }
@@ -456,14 +436,14 @@ func TestValidateRetirementScenario_InvalidTSPStrategy(t *testing.T) {
 func TestValidateRetirementScenario_NeedBasedWithoutTarget(t *testing.T) {
 	parser := NewInputParser()
 	scenario := domain.RetirementScenario{
-		EmployeeName:          "robert",
+		EmployeeName:          "person_a",
 		RetirementDate:        time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
 		SSStartAge:            67,
 		TSPWithdrawalStrategy: "need_based",
 		// Missing TSPWithdrawalTargetMonthly
 	}
 
-	err := parser.validateRetirementScenario("robert", &scenario)
+	err := parser.validateRetirementScenario("person_a", &scenario)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "TSP withdrawal target monthly is required for need_based strategy")
 }
@@ -471,14 +451,14 @@ func TestValidateRetirementScenario_NeedBasedWithoutTarget(t *testing.T) {
 func TestValidateRetirementScenario_VariablePercentageWithoutRate(t *testing.T) {
 	parser := NewInputParser()
 	scenario := domain.RetirementScenario{
-		EmployeeName:          "robert",
+		EmployeeName:          "person_a",
 		RetirementDate:        time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
 		SSStartAge:            67,
 		TSPWithdrawalStrategy: "variable_percentage",
 		// Missing TSPWithdrawalRate
 	}
 
-	err := parser.validateRetirementScenario("robert", &scenario)
+	err := parser.validateRetirementScenario("person_a", &scenario)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "TSP withdrawal rate is required for variable_percentage strategy")
 }
@@ -487,14 +467,14 @@ func TestValidateRetirementScenario_InvalidWithdrawalTarget(t *testing.T) {
 	parser := NewInputParser()
 	target := decimal.Zero
 	scenario := domain.RetirementScenario{
-		EmployeeName:               "robert",
+		EmployeeName:               "person_a",
 		RetirementDate:             time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
 		SSStartAge:                 67,
 		TSPWithdrawalStrategy:      "need_based",
 		TSPWithdrawalTargetMonthly: &target,
 	}
 
-	err := parser.validateRetirementScenario("robert", &scenario)
+	err := parser.validateRetirementScenario("person_a", &scenario)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "TSP withdrawal target monthly must be positive")
 }
@@ -503,20 +483,20 @@ func TestValidateRetirementScenario_InvalidWithdrawalRate(t *testing.T) {
 	parser := NewInputParser()
 	rate := decimal.NewFromFloat(-0.01)
 	scenario := domain.RetirementScenario{
-		EmployeeName:          "robert",
+		EmployeeName:          "person_a",
 		RetirementDate:        time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
 		SSStartAge:            67,
 		TSPWithdrawalStrategy: "variable_percentage",
 		TSPWithdrawalRate:     &rate,
 	}
 
-	err := parser.validateRetirementScenario("robert", &scenario)
+	err := parser.validateRetirementScenario("person_a", &scenario)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "TSP withdrawal rate must be between 0 and 20%")
 
 	rate = decimal.NewFromFloat(0.25) // 25%
 	scenario.TSPWithdrawalRate = &rate
-	err = parser.validateRetirementScenario("robert", &scenario)
+	err = parser.validateRetirementScenario("person_a", &scenario)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "TSP withdrawal rate must be between 0 and 20%")
 }
@@ -527,8 +507,8 @@ func TestCreateExampleConfiguration(t *testing.T) {
 
 	assert.NotNil(t, config)
 	assert.Len(t, config.PersonalDetails, 2)
-	assert.Contains(t, config.PersonalDetails, "robert")
-	assert.Contains(t, config.PersonalDetails, "dawn")
+	assert.Contains(t, config.PersonalDetails, "person_a")
+	assert.Contains(t, config.PersonalDetails, "person_b")
 	assert.Len(t, config.Scenarios, 2) // The example creates 2 scenarios
 
 	// Validate the example configuration
@@ -562,8 +542,8 @@ func createValidEmployee(name, birthDate, hireDate string) domain.Employee {
 func createValidTestConfiguration() *domain.Configuration {
 	return &domain.Configuration{
 		PersonalDetails: map[string]domain.Employee{
-			"robert": createValidEmployee("Robert", "1963-06-15", "1985-03-20"),
-			"dawn":   createValidEmployee("Dawn", "1965-08-22", "1988-07-10"),
+			"person_a": createValidEmployee("PersonA", "1963-06-15", "1985-03-20"),
+			"person_b": createValidEmployee("PersonB", "1965-08-22", "1988-07-10"),
 		},
 		GlobalAssumptions: domain.GlobalAssumptions{
 			InflationRate:           decimal.NewFromFloat(0.025),
@@ -581,14 +561,14 @@ func createValidTestConfiguration() *domain.Configuration {
 		Scenarios: []domain.Scenario{
 			{
 				Name: "Standard Retirement",
-				Robert: domain.RetirementScenario{
-					EmployeeName:          "robert",
+				PersonA: domain.RetirementScenario{
+					EmployeeName:          "person_a",
 					RetirementDate:        time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
 					SSStartAge:            67,
 					TSPWithdrawalStrategy: "4_percent_rule",
 				},
-				Dawn: domain.RetirementScenario{
-					EmployeeName:          "dawn",
+				PersonB: domain.RetirementScenario{
+					EmployeeName:          "person_b",
 					RetirementDate:        time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC),
 					SSStartAge:            67,
 					TSPWithdrawalStrategy: "4_percent_rule",

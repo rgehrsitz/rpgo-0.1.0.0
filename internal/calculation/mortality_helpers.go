@@ -8,40 +8,40 @@ import (
 )
 
 // deriveDeathYearIndexes returns 0-based projection year indexes for each death if within projection horizon.
-func deriveDeathYearIndexes(scenario *domain.Scenario, robert, dawn *domain.Employee, projectionYears int) (robertIdx *int, dawnIdx *int) {
+func deriveDeathYearIndexes(scenario *domain.Scenario, personA, personB *domain.Employee, projectionYears int) (personAIdx *int, personBIdx *int) {
 	if scenario == nil || scenario.Mortality == nil {
 		return nil, nil
 	}
 	baseYear := ProjectionBaseYear
-	if scenario.Mortality.Robert != nil {
-		if scenario.Mortality.Robert.DeathDate != nil {
-			y := scenario.Mortality.Robert.DeathDate.Year() - baseYear
+	if scenario.Mortality.PersonA != nil {
+		if scenario.Mortality.PersonA.DeathDate != nil {
+			y := scenario.Mortality.PersonA.DeathDate.Year() - baseYear
 			if y >= 0 && y < projectionYears {
-				robertIdx = &y
+				personAIdx = &y
 			}
-		} else if scenario.Mortality.Robert.DeathAge != nil {
-			targetYear := robert.BirthDate.Year() + *scenario.Mortality.Robert.DeathAge
+		} else if scenario.Mortality.PersonA.DeathAge != nil {
+			targetYear := personA.BirthDate.Year() + *scenario.Mortality.PersonA.DeathAge
 			y := targetYear - baseYear
 			if y >= 0 && y < projectionYears {
-				robertIdx = &y
+				personAIdx = &y
 			}
 		}
 	}
-	if scenario.Mortality.Dawn != nil {
-		if scenario.Mortality.Dawn.DeathDate != nil {
-			y := scenario.Mortality.Dawn.DeathDate.Year() - baseYear
+	if scenario.Mortality.PersonB != nil {
+		if scenario.Mortality.PersonB.DeathDate != nil {
+			y := scenario.Mortality.PersonB.DeathDate.Year() - baseYear
 			if y >= 0 && y < projectionYears {
-				dawnIdx = &y
+				personBIdx = &y
 			}
-		} else if scenario.Mortality.Dawn.DeathAge != nil {
-			targetYear := dawn.BirthDate.Year() + *scenario.Mortality.Dawn.DeathAge
+		} else if scenario.Mortality.PersonB.DeathAge != nil {
+			targetYear := personB.BirthDate.Year() + *scenario.Mortality.PersonB.DeathAge
 			y := targetYear - baseYear
 			if y >= 0 && y < projectionYears {
-				dawnIdx = &y
+				personBIdx = &y
 			}
 		}
 	}
-	return
+	return personAIdx, personBIdx
 }
 
 // deathFractionInYear returns fraction of year before death (0<frac<1) and true if death occurs that projection year.

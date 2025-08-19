@@ -1,22 +1,18 @@
-Here is a comprehensive specification, combining the best aspects of both previously reviewed documents, designed for a coding agent to implement a Go-based retirement planning tool for federal employees (FERS).
+# Retirement Planning Tool Specification for Federal Employees (FERS)
 
------
+This document outlines the detailed requirements for a Go-based application to assist federal employees (PersonA and PersonB) in planning their retirement. The tool will allow for scenario analysis, comparing proposed retirement plans against current net income, and will focus on accuracy in financial projections, including taxes and benefit COLA adjustments.
 
-## Retirement Planning Tool Specification for Federal Employees (FERS)
+## 1\. Overall Design Principles
 
-This document outlines the detailed requirements for a Go-based application to assist federal employees (Dawn and Robert) in planning their retirement. The tool will allow for scenario analysis, comparing proposed retirement plans against current net income, and will focus on accuracy in financial projections, including taxes and benefit COLA adjustments.
+* **Language:** Go (Golang)
+* **Precision:** All financial calculations (balances, percentages, tax rates, income, expenses) must use a high-precision decimal type to avoid floating-point inaccuracies. Recommend using `github.com/shopspring/decimal`.
+* **Input/Output:** Support both JSON and YAML for input data. Outputs should be clear, comparative, and suitable for analysis (e.g., structured data, potentially for visualization).
+* **Modularity:** The codebase should be modular, with distinct packages/modules for data parsing, financial calculations (FERS, TSP, SS, Taxes), scenario management, and output generation.
+* **User-Adjustable Parameters:** Key financial parameters (inflation, COLAs, TSP returns) must be user-definable within each scenario.
+* **Projection Horizon:** The model should project 25+ years, with a user-definable projection period, emphasizing cash flow changes in the immediate and near-term post-retirement.
+* **Comparison:** The core output must be an "apples-to-apples" comparison of current net income (after all deductions/taxes) versus projected net retirement income for each scenario.
 
-### 1\. Overall Design Principles
-
-  * **Language:** Go (Golang)
-  * **Precision:** All financial calculations (balances, percentages, tax rates, income, expenses) must use a high-precision decimal type to avoid floating-point inaccuracies. Recommend using `github.com/shopspring/decimal`.
-  * **Input/Output:** Support both JSON and YAML for input data. Outputs should be clear, comparative, and suitable for analysis (e.g., structured data, potentially for visualization).
-  * **Modularity:** The codebase should be modular, with distinct packages/modules for data parsing, financial calculations (FERS, TSP, SS, Taxes), scenario management, and output generation.
-  * **User-Adjustable Parameters:** Key financial parameters (inflation, COLAs, TSP returns) must be user-definable within each scenario.
-  * **Projection Horizon:** The model should project 25+ years, with a user-definable projection period, emphasizing cash flow changes in the immediate and near-term post-retirement.
-  * **Comparison:** The core output must be an "apples-to-apples" comparison of current net income (after all deductions/taxes) versus projected net retirement income for each scenario.
-
-### 2\. Input Data Structure
+## 2\. Input Data Structure
 
 The input data should be provided in either JSON or YAML format, structured to support multiple scenarios and personal details.
 
@@ -24,7 +20,7 @@ The input data should be provided in either JSON or YAML format, structured to s
 # Example YAML Input Structure
 
 personal_details:
-  robert:
+    person_a:
     birth_date: "1975-03-15"       # YYYY-MM-DD
     hire_date: "2000-07-01"        # YYYY-MM-DD
     current_salary: 120000.00
@@ -38,7 +34,7 @@ personal_details:
     fehb_premium_per_pay_period: 600.00   # Current FEHB premium per pay period (will be annualized by multiplying by 26)
     survivor_benefit_election_percent: 0.0 # 0% as requested
 
-  dawn:
+    person_b:
     birth_date: "1978-06-20"
     hire_date: "2003-09-10"
     current_salary: 90000.00
@@ -49,7 +45,7 @@ personal_details:
     ss_benefit_fra: 2500.00
     ss_benefit_62: 1750.00
     ss_benefit_70: 3300.00
-    fehb_premium_per_pay_period: 0.0 # Assumed covered under Robert's FEHB
+    fehb_premium_per_pay_period: 0.0 # Assumed covered under Person A's FEHB
     survivor_benefit_election_percent: 0.0
 
 global_assumptions:
@@ -65,41 +61,41 @@ global_assumptions:
     municipality: "Upper Makefield Township"
 
 scenarios:
-  - name: "Scenario 1: Robert Age 57, Dawn Age 54"
-    robert:
+    - name: "Scenario 1: Person A Age 57, Person B Age 54"
+    person_a:
       retirement_date: "2032-03-31" # YYYY-MM-DD
       ss_start_age: 62
       tsp_withdrawal_strategy: "4_percent_rule" # "4_percent_rule", "need_based"
       tsp_withdrawal_target_monthly: null # Only for need_based, e.g., 5000.00
-    dawn:
+    person_b:
       retirement_date: "2032-03-31"
       ss_start_age: 62
       tsp_withdrawal_strategy: "4_percent_rule"
       tsp_withdrawal_target_monthly: null
 
-  - name: "Scenario 2: Robert Age 62, Dawn Age 59"
-    robert:
+    - name: "Scenario 2: Person A Age 62, Person B Age 59"
+    person_a:
       retirement_date: "2037-03-31"
       ss_start_age: 67 # Full Retirement Age
       tsp_withdrawal_strategy: "need_based"
       tsp_withdrawal_target_monthly: 6000.00
-    dawn:
+    person_b:
       retirement_date: "2037-03-31"
       ss_start_age: 62
       tsp_withdrawal_strategy: "4_percent_rule"
       tsp_withdrawal_target_monthly: null
 ```
 
-### 3\. Core Calculation Modules
+## 3\. Core Calculation Modules
 
 The application should implement the following calculation modules:
 
-#### 3.1 Date and Age Utilities
+### 3.1 Date and Age Utilities
 
-  * Functions to calculate age from birth date, years of service from hire date, and remaining service years.
-  * Functions to determine Full Retirement Age (FRA) for Social Security based on birth year.
+* Functions to calculate age from birth date, years of service from hire date, and remaining service years.
+* Functions to determine Full Retirement Age (FRA) for Social Security based on birth year.
 
-#### 3.2 FERS Pension (Annuity) Calculation
+### 3.2 FERS Pension (Annuity) Calculation
 
 ```go
 // Represents FERS pension calculation inputs
@@ -166,7 +162,7 @@ func CalculateFERSSpecialRetirementSupplement(ssBenefitAt62 decimal.Decimal, fer
 }
 ```
 
-#### 3.3 Thrift Savings Plan (TSP)
+### 3.3 Thrift Savings Plan (TSP)
 
 ```go
 // TSPAccount represents a TSP account (Traditional or Roth)
@@ -263,7 +259,7 @@ func RunMonteCarloSimulation(initialBalance decimal.Decimal, strategy TSPWithdra
 // Note: Actual historical data should be sourced and periodically updated.
 ```
 
-#### 3.4 Social Security
+### 3.4 Social Security
 
 ```go
 // CalculateMonthlySSBenefitAtAge calculates the monthly SS benefit based on claiming age.
@@ -326,11 +322,11 @@ func CalculateTaxableSocialSecurity(totalSSBenefitAnnual decimal.Decimal, provis
 }
 ```
 
-#### 3.5 Federal Employee Health Benefits (FEHB)
+### 3.5 Federal Employee Health Benefits (FEHB)
 
-  * **Pre-Retirement:** FEHB premiums are paid pre-tax (reducing taxable income).
-  * **Post-Retirement:** FEHB premiums are paid after-tax. This distinction is crucial for an "apples-to-apples" comparison of net income.
-  * The model should project FEHB premiums annually using the `fehb_premium_inflation` rate.
+* **Pre-Retirement:** FEHB premiums are paid pre-tax (reducing taxable income).
+* **Post-Retirement:** FEHB premiums are paid after-tax. This distinction is crucial for an "apples-to-apples" comparison of net income.
+* The model should project FEHB premiums annually using the `fehb_premium_inflation` rate.
 
 #### 3.6 Comprehensive Tax Modeling
 
@@ -383,68 +379,68 @@ func CalculateLocalIncomeTax(income TaxIncome) decimal.Decimal {
 }
 ```
 
-### 4\. Output and Visualization
+## 4\. Output and Visualization
 
 The tool should provide structured data output (e.g., CSV, JSON, or a custom structured text format) that can be easily consumed for analysis and potential visualization.
 
-  * **Annual Cash Flow Projections:** For each year of the projection period for each scenario:
+* **Annual Cash Flow Projections:** For each year of the projection period for each scenario:
 
-      * **Pre-Retirement (Current Situation):**
-          * Gross Salary
-          * TSP Contributions (pre-tax vs. Roth)
-          * FEHB Premiums (pre-tax)
-          * Federal Income Tax
-          * State Income Tax
-          * Local Income Tax
-          * FICA (Social Security & Medicare) Tax
-          * Net Income (After all deductions and taxes)
-      * **Post-Retirement (Scenario):**
-          * FERS Pension (annual, with COLA)
-          * FERS Special Retirement Supplement (if applicable)
-          * Social Security Benefits (annual, with COLA, taxable portion identified)
-          * TSP Withdrawals (Traditional and Roth, annual)
-          * Total Gross Retirement Income
-          * FEHB Premiums (after-tax)
-          * Federal Income Tax
-          * State Income Tax
-          * Local Income Tax (should be zero post-retirement for Robert and Dawn)
-          * Net Retirement Income (After all deductions and taxes)
-          * TSP Traditional Balance (Year-end)
-          * TSP Roth Balance (Year-end)
+  * **Pre-Retirement (Current Situation):**
+    * Gross Salary
+    * TSP Contributions (pre-tax vs. Roth)
+    * FEHB Premiums (pre-tax)
+    * Federal Income Tax
+    * State Income Tax
+    * Local Income Tax
+    * FICA (Social Security & Medicare) Tax
+    * Net Income (After all deductions and taxes)
+  * **Post-Retirement (Scenario):**
+    * FERS Pension (annual, with COLA)
+    * FERS Special Retirement Supplement (if applicable)
+    * Social Security Benefits (annual, with COLA, taxable portion identified)
+    * TSP Withdrawals (Traditional and Roth, annual)
+    * Total Gross Retirement Income
+    * FEHB Premiums (after-tax)
+    * Federal Income Tax
+    * State Income Tax
+    * Local Income Tax (should be zero post-retirement for Person A and Person B)
+    * Net Retirement Income (After all deductions and taxes)
+    * TSP Traditional Balance (Year-end)
+    * TSP Roth Balance (Year-end)
 
-  * **Summary Tables/Metrics for each Scenario:**
+* **Summary Tables/Metrics for each Scenario:**
 
-      * Years until retirement (for each spouse)
-      * Projected FERS Pension (initial annual)
-      * Projected Social Security Benefit (initial annual)
-      * Initial Annual TSP Withdrawal
-      * Net Income in Year 1 of Retirement vs. Last Year of Work (the "apples-to-apples" comparison)
-      * TSP Longevity (e.g., "TSP funds last until age X")
-      * Total Projected Net Income over the full projection period.
+  * Years until retirement (for each spouse)
+  * Projected FERS Pension (initial annual)
+  * Projected Social Security Benefit (initial annual)
+  * Initial Annual TSP Withdrawal
+  * Net Income in Year 1 of Retirement vs. Last Year of Work (the "apples-to-apples" comparison)
+  * TSP Longevity (e.g., "TSP funds last until age X")
+  * Total Projected Net Income over the full projection period.
 
-  * **Comparison View:** A direct side-by-side comparison of key metrics across all analyzed scenarios.
+* **Comparison View:** A direct side-by-side comparison of key metrics across all analyzed scenarios.
 
-### 5\. Historical Data and Research
+## 5\. Historical Data and Research
 
 The coding agent should include or provide references to the following historical data for user parameterization or Monte Carlo simulation:
 
-  * **FERS COLA History:** While the formula is defined, historical CPI data can be used to validate or project.
-  * **TSP Fund Historical Returns:** Provide approximate historical average annual returns for TSP C, S, I, F, and G funds. (e.g., C Fund \~10%, S Fund \~12%, I Fund \~6%, F Fund \~3%, G Fund \~2% as general estimates for user guidance, but emphasize the need for actual data if Monte Carlo is implemented rigorously).
-  * **Inflation Rates:** Historical CPI data.
-  * **Social Security COLA History:** For context.
+* **FERS COLA History:** While the formula is defined, historical CPI data can be used to validate or project.
+* **TSP Fund Historical Returns:** Provide approximate historical average annual returns for TSP C, S, I, F, and G funds. (e.g., C Fund \~10%, S Fund \~12%, I Fund \~6%, F Fund \~3%, G Fund \~2% as general estimates for user guidance, but emphasize the need for actual data if Monte Carlo is implemented rigorously).
+* **Inflation Rates:** Historical CPI data.
+* **Social Security COLA History:** For context.
 
-### 6\. Key Considerations and Assumptions
+## 6\. Key Considerations and Assumptions
 
-  * **No Debt:** Assume no mortgage, car, or other loans, simplifying expense tracking.
-  * **FEHB Continuity:** Assume Robert's FEHB coverage continues into retirement for both spouses.
-  * **Survivor Benefit:** Assume 0% survivor benefit election, meaning no pension reduction for this purpose.
-  * **FICA Taxes:** FICA taxes (Social Security & Medicare) apply to earned income (salary) only, not retirement income. This should be accounted for in the "current situation" net income.
-  * **Medicare Part B:** Not explicitly modeled as FEHB is maintained. This can be a future enhancement if needed.
-  * **Regulatory Updates:**
-      * **Social Security Fairness Act (WEP/GPO Repeal):** Crucially, assume WEP and GPO are repealed as of January 1, 2025. This simplifies Social Security benefit calculations.
-      * **SECURE 2.0 Act:** Implement the updated RMD ages: 73 for those born 1951-1959, and 75 for those born 1960 or later.
-  * **High-3 Salary Calculation:** If `high_3_salary` is not provided, the model should be able to estimate it from `current_salary` and a simple growth assumption, or prompt for more historical salary data if accuracy is critical.
-  * **TSP Agency Match:** Assume the standard 5% agency match on TSP contributions if the user contributes at least 5%. This should be factored into pre-retirement TSP growth.
+* **No Debt:** Assume no mortgage, car, or other loans, simplifying expense tracking.
+  * **FEHB Continuity:** Assume Person A's FEHB coverage continues into retirement for both spouses.
+* **Survivor Benefit:** Assume 0% survivor benefit election, meaning no pension reduction for this purpose.
+* **FICA Taxes:** FICA taxes (Social Security & Medicare) apply to earned income (salary) only, not retirement income. This should be accounted for in the "current situation" net income.
+* **Medicare Part B:** Not explicitly modeled as FEHB is maintained. This can be a future enhancement if needed.
+* **Regulatory Updates:**
+  * **Social Security Fairness Act (WEP/GPO Repeal):** Crucially, assume WEP and GPO are repealed as of January 1, 2025. This simplifies Social Security benefit calculations.
+  * **SECURE 2.0 Act:** Implement the updated RMD ages: 73 for those born 1951-1959, and 75 for those born 1960 or later.
+* **High-3 Salary Calculation:** If `high_3_salary` is not provided, the model should be able to estimate it from `current_salary` and a simple growth assumption, or prompt for more historical salary data if accuracy is critical.
+* **TSP Agency Match:** Assume the standard 5% agency match on TSP contributions if the user contributes at least 5%. This should be factored into pre-retirement TSP growth.
 
 -----
 

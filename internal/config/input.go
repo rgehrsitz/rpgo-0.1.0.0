@@ -30,6 +30,9 @@ func (ip *InputParser) LoadFromFile(filename string) (*domain.Configuration, err
 		return nil, fmt.Errorf("failed to parse YAML: %w", err)
 	}
 
+	// Legacy key mapping has been removed; configuration should use
+	// 'person_a' and 'person_b' keys exclusively.
+
 	// Validate the configuration
 	if err := ip.ValidateConfiguration(&config); err != nil {
 		return nil, fmt.Errorf("configuration validation failed: %w", err)
@@ -46,11 +49,11 @@ func (ip *InputParser) ValidateConfiguration(config *domain.Configuration) error
 	}
 
 	// Check for required employees
-	if _, exists := config.PersonalDetails["robert"]; !exists {
-		return fmt.Errorf("robert employee details are required")
+	if _, exists := config.PersonalDetails["person_a"]; !exists {
+		return fmt.Errorf("person_a employee details are required")
 	}
-	if _, exists := config.PersonalDetails["dawn"]; !exists {
-		return fmt.Errorf("dawn employee details are required")
+	if _, exists := config.PersonalDetails["person_b"]; !exists {
+		return fmt.Errorf("person_b employee details are required")
 	}
 
 	// Validate each employee
@@ -75,8 +78,6 @@ func (ip *InputParser) ValidateConfiguration(config *domain.Configuration) error
 			return fmt.Errorf("scenario %d validation failed: %w", i, err)
 		}
 	}
-
-	return nil
 
 	return nil
 }
@@ -172,26 +173,26 @@ func (ip *InputParser) validateScenario(_ int, scenario *domain.Scenario) error 
 		return fmt.Errorf("scenario name is required")
 	}
 
-	// Validate Robert's scenario
-	if err := ip.validateRetirementScenario("robert", &scenario.Robert); err != nil {
-		return fmt.Errorf("robert scenario validation failed: %w", err)
+	// Validate PersonA scenario
+	if err := ip.validateRetirementScenario("person_a", &scenario.PersonA); err != nil {
+		return fmt.Errorf("person_a scenario validation failed: %w", err)
 	}
 
-	// Validate Dawn's scenario
-	if err := ip.validateRetirementScenario("dawn", &scenario.Dawn); err != nil {
-		return fmt.Errorf("dawn scenario validation failed: %w", err)
+	// Validate PersonB scenario
+	if err := ip.validateRetirementScenario("person_b", &scenario.PersonB); err != nil {
+		return fmt.Errorf("person_b scenario validation failed: %w", err)
 	}
 
 	// Validate optional mortality block
 	if scenario.Mortality != nil {
-		if scenario.Mortality.Robert != nil {
-			if scenario.Mortality.Robert.DeathDate != nil && scenario.Mortality.Robert.DeathAge != nil {
-				return fmt.Errorf("mortality.robert: specify either death_date or death_age, not both")
+		if scenario.Mortality.PersonA != nil {
+			if scenario.Mortality.PersonA.DeathDate != nil && scenario.Mortality.PersonA.DeathAge != nil {
+				return fmt.Errorf("mortality.person_a: specify either death_date or death_age, not both")
 			}
 		}
-		if scenario.Mortality.Dawn != nil {
-			if scenario.Mortality.Dawn.DeathDate != nil && scenario.Mortality.Dawn.DeathAge != nil {
-				return fmt.Errorf("mortality.dawn: specify either death_date or death_age, not both")
+		if scenario.Mortality.PersonB != nil {
+			if scenario.Mortality.PersonB.DeathDate != nil && scenario.Mortality.PersonB.DeathAge != nil {
+				return fmt.Errorf("mortality.person_b: specify either death_date or death_age, not both")
 			}
 		}
 		if scenario.Mortality.Assumptions != nil {
@@ -242,20 +243,20 @@ func (ip *InputParser) validateRetirementScenario(_ string, scenario *domain.Ret
 
 // CreateExampleConfiguration creates an example configuration file
 func (ip *InputParser) CreateExampleConfiguration() *domain.Configuration {
-	robertBirthDate, _ := time.Parse("2006-01-02", "1963-06-15")
-	robertHireDate, _ := time.Parse("2006-01-02", "1985-03-20")
-	dawnBirthDate, _ := time.Parse("2006-01-02", "1965-08-22")
-	dawnHireDate, _ := time.Parse("2006-01-02", "1988-07-10")
+	personABirthDate, _ := time.Parse("2006-01-02", "1963-06-15")
+	personAHireDate, _ := time.Parse("2006-01-02", "1985-03-20")
+	personBBirthDate, _ := time.Parse("2006-01-02", "1965-08-22")
+	personBHireDate, _ := time.Parse("2006-01-02", "1988-07-10")
 
-	robertRetirementDate, _ := time.Parse("2006-01-02", "2025-12-31")
-	dawnRetirementDate, _ := time.Parse("2006-01-02", "2025-12-31")
+	personARetirementDate, _ := time.Parse("2006-01-02", "2025-12-31")
+	personBRetirementDate, _ := time.Parse("2006-01-02", "2025-12-31")
 
 	return &domain.Configuration{
 		PersonalDetails: map[string]domain.Employee{
-			"robert": {
-				Name:                           "Robert",
-				BirthDate:                      robertBirthDate,
-				HireDate:                       robertHireDate,
+			"person_a": {
+				Name:                           "PersonA",
+				BirthDate:                      personABirthDate,
+				HireDate:                       personAHireDate,
 				CurrentSalary:                  decimal.NewFromInt(95000),
 				High3Salary:                    decimal.NewFromInt(93000),
 				TSPBalanceTraditional:          decimal.NewFromInt(450000),
@@ -267,10 +268,10 @@ func (ip *InputParser) CreateExampleConfiguration() *domain.Configuration {
 				FEHBPremiumPerPayPeriod:        decimal.NewFromInt(875),
 				SurvivorBenefitElectionPercent: decimal.Zero,
 			},
-			"dawn": {
-				Name:                           "Dawn",
-				BirthDate:                      dawnBirthDate,
-				HireDate:                       dawnHireDate,
+			"person_b": {
+				Name:                           "PersonB",
+				BirthDate:                      personBBirthDate,
+				HireDate:                       personBHireDate,
 				CurrentSalary:                  decimal.NewFromInt(87000),
 				High3Salary:                    decimal.NewFromInt(85000),
 				TSPBalanceTraditional:          decimal.NewFromInt(380000),
@@ -279,7 +280,7 @@ func (ip *InputParser) CreateExampleConfiguration() *domain.Configuration {
 				SSBenefitFRA:                   decimal.NewFromInt(2200),
 				SSBenefit62:                    decimal.NewFromInt(1540),
 				SSBenefit70:                    decimal.NewFromInt(2728),
-				FEHBPremiumPerPayPeriod:        decimal.Zero, // Covered under Robert's FEHB
+				FEHBPremiumPerPayPeriod:        decimal.Zero, // Covered under PersonA FEHB
 				SurvivorBenefitElectionPercent: decimal.Zero,
 			},
 		},
@@ -299,16 +300,16 @@ func (ip *InputParser) CreateExampleConfiguration() *domain.Configuration {
 		Scenarios: []domain.Scenario{
 			{
 				Name: "Early Retirement 2025",
-				Robert: domain.RetirementScenario{
-					EmployeeName:               "robert",
-					RetirementDate:             robertRetirementDate,
+				PersonA: domain.RetirementScenario{
+					EmployeeName:               "person_a",
+					RetirementDate:             personARetirementDate,
 					SSStartAge:                 62,
 					TSPWithdrawalStrategy:      "4_percent_rule",
 					TSPWithdrawalTargetMonthly: nil,
 				},
-				Dawn: domain.RetirementScenario{
-					EmployeeName:               "dawn",
-					RetirementDate:             dawnRetirementDate,
+				PersonB: domain.RetirementScenario{
+					EmployeeName:               "person_b",
+					RetirementDate:             personBRetirementDate,
 					SSStartAge:                 62,
 					TSPWithdrawalStrategy:      "4_percent_rule",
 					TSPWithdrawalTargetMonthly: nil,
@@ -316,16 +317,16 @@ func (ip *InputParser) CreateExampleConfiguration() *domain.Configuration {
 			},
 			{
 				Name: "Delayed Retirement 2028",
-				Robert: domain.RetirementScenario{
-					EmployeeName:               "robert",
-					RetirementDate:             robertRetirementDate.AddDate(3, 0, 0),
+				PersonA: domain.RetirementScenario{
+					EmployeeName:               "person_a",
+					RetirementDate:             personARetirementDate.AddDate(3, 0, 0),
 					SSStartAge:                 67,
 					TSPWithdrawalStrategy:      "need_based",
 					TSPWithdrawalTargetMonthly: &[]decimal.Decimal{decimal.NewFromInt(3000)}[0],
 				},
-				Dawn: domain.RetirementScenario{
-					EmployeeName:               "dawn",
-					RetirementDate:             dawnRetirementDate.AddDate(3, 0, 0),
+				PersonB: domain.RetirementScenario{
+					EmployeeName:               "person_b",
+					RetirementDate:             personBRetirementDate.AddDate(3, 0, 0),
 					SSStartAge:                 62,
 					TSPWithdrawalStrategy:      "4_percent_rule",
 					TSPWithdrawalTargetMonthly: nil,

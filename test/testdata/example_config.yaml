@@ -1,6 +1,6 @@
 personal_details:
-  robert:
-    name: "Robert"
+  person_a:
+    name: "Person A"
     birth_date: "1963-06-15T00:00:00Z"
     hire_date: "1985-03-20T00:00:00Z"
     current_salary: 95000
@@ -14,8 +14,8 @@ personal_details:
     fehb_premium_per_pay_period: 875
     survivor_benefit_election_percent: 0.0
 
-  dawn:
-    name: "Dawn"
+  person_b:
+    name: "Person B"
     birth_date: "1965-08-22T00:00:00Z"
     hire_date: "1988-07-10T00:00:00Z"
     current_salary: 87000
@@ -43,28 +43,28 @@ global_assumptions:
 
 scenarios:
   - name: "Early Retirement 2025"
-    robert:
-      employee_name: "robert"
+    person_a:
+      employee_name: "person_a"
       retirement_date: "2025-12-31T00:00:00Z"
       ss_start_age: 62
       tsp_withdrawal_strategy: "4_percent_rule"
       tsp_withdrawal_target_monthly: null
-    dawn:
-      employee_name: "dawn"
+    person_b:
+      employee_name: "person_b"
       retirement_date: "2025-12-31T00:00:00Z"
       ss_start_age: 62
       tsp_withdrawal_strategy: "4_percent_rule"
       tsp_withdrawal_target_monthly: null
 
   - name: "Delayed Retirement 2028"
-    robert:
-      employee_name: "robert"
+    person_a:
+      employee_name: "person_a"
       retirement_date: "2028-12-31T00:00:00Z"
       ss_start_age: 67
       tsp_withdrawal_strategy: "need_based"
       tsp_withdrawal_target_monthly: 3000
-    dawn:
-      employee_name: "dawn"
+    person_b:
+      employee_name: "person_b"
       retirement_date: "2028-12-31T00:00:00Z"
       ss_start_age: 62
       tsp_withdrawal_strategy: "4_percent_rule"

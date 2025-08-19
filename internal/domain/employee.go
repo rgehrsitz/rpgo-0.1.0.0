@@ -95,15 +95,15 @@ func (rs *RetirementScenario) UnmarshalYAML(value *yaml.Node) error {
 // Scenario represents a complete retirement scenario for both employees
 type Scenario struct {
 	Name      string             `yaml:"name" json:"name"`
-	Robert    RetirementScenario `yaml:"robert" json:"robert"`
-	Dawn      RetirementScenario `yaml:"dawn" json:"dawn"`
+	PersonA   RetirementScenario `yaml:"person_a" json:"person_a"`
+	PersonB   RetirementScenario `yaml:"person_b" json:"person_b"`
 	Mortality *ScenarioMortality `yaml:"mortality,omitempty" json:"mortality,omitempty"`
 }
 
 // ScenarioMortality groups mortality specifications and assumptions for a scenario
 type ScenarioMortality struct {
-	Robert      *MortalitySpec        `yaml:"robert,omitempty" json:"robert,omitempty"`
-	Dawn        *MortalitySpec        `yaml:"dawn,omitempty" json:"dawn,omitempty"`
+	PersonA     *MortalitySpec        `yaml:"person_a,omitempty" json:"person_a,omitempty"`
+	PersonB     *MortalitySpec        `yaml:"person_b,omitempty" json:"person_b,omitempty"`
 	Assumptions *MortalityAssumptions `yaml:"assumptions,omitempty" json:"assumptions,omitempty"`
 }
 

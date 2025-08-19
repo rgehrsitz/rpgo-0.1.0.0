@@ -67,18 +67,18 @@ func TestAgeCalculation(t *testing.T) {
 			description: "Born on leap day, checking on leap day",
 		},
 		{
-			name:        "Robert's actual scenario",
+			name:        "Person A actual scenario",
 			birthDate:   time.Date(1965, 2, 25, 0, 0, 0, 0, time.UTC),
 			atDate:      time.Date(2025, 12, 1, 0, 0, 0, 0, time.UTC), // Retirement date
 			expectedAge: 60,
-			description: "Robert's age at retirement",
+			description: "Person A age at retirement",
 		},
 		{
-			name:        "Dawn's actual scenario",
+			name:        "Person B actual scenario",
 			birthDate:   time.Date(1963, 7, 31, 0, 0, 0, 0, time.UTC),
 			atDate:      time.Date(2025, 8, 30, 0, 0, 0, 0, time.UTC), // Retirement date
 			expectedAge: 62,
-			description: "Dawn's age at retirement",
+			description: "Person B age at retirement",
 		},
 	}
 
@@ -94,12 +94,12 @@ func TestAgeCalculation(t *testing.T) {
 // TestYearsOfService tests years of service calculation
 func TestYearsOfService(t *testing.T) {
 	tests := []struct {
-		name            string
-		hireDate        time.Time
-		atDate          time.Time
-		expectedYears   float64
-		tolerance       float64
-		description     string
+		name          string
+		hireDate      time.Time
+		atDate        time.Time
+		expectedYears float64
+		tolerance     float64
+		description   string
 	}{
 		{
 			name:          "Exact years",
@@ -118,20 +118,20 @@ func TestYearsOfService(t *testing.T) {
 			description:   "25.5 years of service",
 		},
 		{
-			name:          "Robert's actual service",
+			name:          "Person A actual service",
 			hireDate:      time.Date(1987, 6, 22, 0, 0, 0, 0, time.UTC),
 			atDate:        time.Date(2025, 12, 1, 0, 0, 0, 0, time.UTC),
 			expectedYears: 38.44,
 			tolerance:     0.1,
-			description:   "Robert's service years at retirement",
+			description:   "Person A service years at retirement",
 		},
 		{
-			name:          "Dawn's actual service",
+			name:          "Person B actual service",
 			hireDate:      time.Date(1995, 7, 11, 0, 0, 0, 0, time.UTC),
 			atDate:        time.Date(2025, 8, 30, 0, 0, 0, 0, time.UTC),
 			expectedYears: 30.13,
 			tolerance:     0.1,
-			description:   "Dawn's service years at retirement",
+			description:   "Person B service years at retirement",
 		},
 		{
 			name:          "Leap year handling",
@@ -173,22 +173,22 @@ func TestFullRetirementAge(t *testing.T) {
 			description: "FRA 66 for 1943-1954 births",
 		},
 		{
-			name:        "Born 1960 or later",
-			birthDate:   time.Date(1965, 2, 25, 0, 0, 0, 0, time.UTC), // Robert
-			expectedFRA: 67,
-			description: "FRA 67 for 1960+ births",
-		},
-		{
 			name:        "Born 1959 - transition year",
 			birthDate:   time.Date(1959, 1, 1, 0, 0, 0, 0, time.UTC),
 			expectedFRA: 66, // 66 + 10 months, but function returns 66
 			description: "FRA during transition period",
 		},
 		{
-			name:        "Dawn's FRA",
+			name:        "Born 1960 - Person A",
+			birthDate:   time.Date(1965, 2, 25, 0, 0, 0, 0, time.UTC),
+			expectedFRA: 67,
+			description: "FRA 67 for 1960+ births",
+		},
+		{
+			name:        "Person B FRA",
 			birthDate:   time.Date(1963, 7, 31, 0, 0, 0, 0, time.UTC),
 			expectedFRA: 67,
-			description: "Dawn's full retirement age",
+			description: "Person B full retirement age",
 		},
 	}
 
@@ -222,16 +222,16 @@ func TestMinimumRetirementAge(t *testing.T) {
 			description: "MRA 56 for 1953-1964 births",
 		},
 		{
-			name:        "Born 1965 - Robert",
+			name:        "Born 1965 - Person A",
 			birthDate:   time.Date(1965, 2, 25, 0, 0, 0, 0, time.UTC),
 			expectedMRA: 56, // 56 + 2 months, but function returns 56
-			description: "Robert's minimum retirement age",
+			description: "Person A minimum retirement age",
 		},
 		{
-			name:        "Born 1963 - Dawn",
+			name:        "Born 1963 - Person B",
 			birthDate:   time.Date(1963, 7, 31, 0, 0, 0, 0, time.UTC),
 			expectedMRA: 56,
-			description: "Dawn's minimum retirement age",
+			description: "Person B minimum retirement age",
 		},
 		{
 			name:        "Born 1970 or later",
@@ -253,11 +253,11 @@ func TestMinimumRetirementAge(t *testing.T) {
 // TestMedicareEligibility tests Medicare eligibility
 func TestMedicareEligibility(t *testing.T) {
 	tests := []struct {
-		name               string
-		birthDate          time.Time
-		atDate             time.Time
-		expectedEligible   bool
-		description        string
+		name             string
+		birthDate        time.Time
+		atDate           time.Time
+		expectedEligible bool
+		description      string
 	}{
 		{
 			name:             "Age 64 - not eligible",
@@ -281,18 +281,18 @@ func TestMedicareEligibility(t *testing.T) {
 			description:      "Over 65",
 		},
 		{
-			name:             "Robert at retirement - not eligible",
+			name:             "Person A at retirement - not eligible",
 			birthDate:        time.Date(1965, 2, 25, 0, 0, 0, 0, time.UTC),
 			atDate:           time.Date(2025, 12, 1, 0, 0, 0, 0, time.UTC),
 			expectedEligible: false,
-			description:      "Robert at age 60 (not Medicare eligible)",
+			description:      "Person A at age 60 (not Medicare eligible)",
 		},
 		{
-			name:             "Dawn at retirement - not eligible",
+			name:             "Person B at retirement - not eligible",
 			birthDate:        time.Date(1963, 7, 31, 0, 0, 0, 0, time.UTC),
 			atDate:           time.Date(2025, 8, 30, 0, 0, 0, 0, time.UTC),
 			expectedEligible: false,
-			description:      "Dawn at age 62 (not Medicare eligible)",
+			description:      "Person B at age 62 (not Medicare eligible)",
 		},
 	}
 
@@ -336,18 +336,18 @@ func TestRMDYear(t *testing.T) {
 			description: "Future SECURE 2.0 RMD age",
 		},
 		{
-			name:        "Robert - not yet RMD age",
+			name:        "Person A - not yet RMD age",
 			birthDate:   time.Date(1965, 2, 25, 0, 0, 0, 0, time.UTC),
 			atDate:      time.Date(2025, 12, 1, 0, 0, 0, 0, time.UTC), // Age 60
 			expectedRMD: false,
-			description: "Robert not yet at RMD age",
+			description: "Person A not yet at RMD age",
 		},
 		{
-			name:        "Dawn - not yet RMD age",
+			name:        "Person B - not yet RMD age",
 			birthDate:   time.Date(1963, 7, 31, 0, 0, 0, 0, time.UTC),
 			atDate:      time.Date(2025, 8, 30, 0, 0, 0, 0, time.UTC), // Age 62
 			expectedRMD: false,
-			description: "Dawn not yet at RMD age",
+			description: "Person B not yet at RMD age",
 		},
 	}
 
@@ -387,16 +387,16 @@ func TestGetRMDAge(t *testing.T) {
 			description: "Future SECURE 2.0 RMD age",
 		},
 		{
-			name:        "Robert's RMD age",
+			name:        "Person A RMD age",
 			birthYear:   1965,
 			expectedAge: 75,
-			description: "Robert will have RMD at age 75",
+			description: "Person A will have RMD at age 75",
 		},
 		{
-			name:        "Dawn's RMD age",
+			name:        "Person B RMD age",
 			birthYear:   1963,
 			expectedAge: 75,
-			description: "Dawn will have RMD at age 75",
+			description: "Person B will have RMD at age 75",
 		},
 	}
 

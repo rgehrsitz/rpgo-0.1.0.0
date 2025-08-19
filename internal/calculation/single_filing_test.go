@@ -38,12 +38,12 @@ func TestSSTaxationStatusSwitch(t *testing.T) {
 
 // Integration style test: mortality causes filing status change -> different SS taxation
 func TestMortalityFilingAffectsSSTaxation(t *testing.T) {
-	robert := &domain.Employee{Name: "Robert", BirthDate: time.Date(1960, 1, 1, 0, 0, 0, 0, time.UTC), HireDate: time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC), CurrentSalary: decimal.NewFromInt(120000), High3Salary: decimal.NewFromInt(120000), SurvivorBenefitElectionPercent: decimal.NewFromFloat(0.5), SSBenefitFRA: decimal.NewFromInt(3000)}
-	dawn := &domain.Employee{Name: "Dawn", BirthDate: time.Date(1962, 1, 1, 0, 0, 0, 0, time.UTC), HireDate: time.Date(1992, 1, 1, 0, 0, 0, 0, time.UTC), CurrentSalary: decimal.NewFromInt(80000), High3Salary: decimal.NewFromInt(80000), SurvivorBenefitElectionPercent: decimal.NewFromFloat(0.5), SSBenefitFRA: decimal.NewFromInt(2500)}
-	scenario := &domain.Scenario{Name: "Mortality SS Tax", Robert: domain.RetirementScenario{EmployeeName: robert.Name, RetirementDate: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC), SSStartAge: 67, TSPWithdrawalStrategy: "4_percent_rule"}, Dawn: domain.RetirementScenario{EmployeeName: dawn.Name, RetirementDate: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC), SSStartAge: 67, TSPWithdrawalStrategy: "4_percent_rule"}, Mortality: &domain.ScenarioMortality{Robert: &domain.MortalitySpec{DeathDate: &[]time.Time{time.Date(2029, 1, 1, 0, 0, 0, 0, time.UTC)}[0]}, Assumptions: &domain.MortalityAssumptions{FilingStatusSwitch: "immediate"}}}
+	personA := &domain.Employee{Name: "PersonA", BirthDate: time.Date(1960, 1, 1, 0, 0, 0, 0, time.UTC), HireDate: time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC), CurrentSalary: decimal.NewFromInt(120000), High3Salary: decimal.NewFromInt(120000), SurvivorBenefitElectionPercent: decimal.NewFromFloat(0.5), SSBenefitFRA: decimal.NewFromInt(3000)}
+	personB := &domain.Employee{Name: "PersonB", BirthDate: time.Date(1962, 1, 1, 0, 0, 0, 0, time.UTC), HireDate: time.Date(1992, 1, 1, 0, 0, 0, 0, time.UTC), CurrentSalary: decimal.NewFromInt(80000), High3Salary: decimal.NewFromInt(80000), SurvivorBenefitElectionPercent: decimal.NewFromFloat(0.5), SSBenefitFRA: decimal.NewFromInt(2500)}
+	scenario := &domain.Scenario{Name: "Mortality SS Tax", PersonA: domain.RetirementScenario{EmployeeName: personA.Name, RetirementDate: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC), SSStartAge: 67, TSPWithdrawalStrategy: "4_percent_rule"}, PersonB: domain.RetirementScenario{EmployeeName: personB.Name, RetirementDate: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC), SSStartAge: 67, TSPWithdrawalStrategy: "4_percent_rule"}, Mortality: &domain.ScenarioMortality{PersonA: &domain.MortalitySpec{DeathDate: &[]time.Time{time.Date(2029, 1, 1, 0, 0, 0, 0, time.UTC)}[0]}, Assumptions: &domain.MortalityAssumptions{FilingStatusSwitch: "immediate"}}}
 	assumptions := &domain.GlobalAssumptions{ProjectionYears: 8, InflationRate: decimal.NewFromFloat(0.02), COLAGeneralRate: decimal.NewFromFloat(0.02)}
 	ce := NewCalculationEngine()
-	proj := ce.GenerateAnnualProjection(robert, dawn, scenario, assumptions, domain.FederalRules{})
+	proj := ce.GenerateAnnualProjection(personA, personB, scenario, assumptions, domain.FederalRules{})
 	// Find first year after death (same year since immediate switch) and prior year
 	deathIdx := 2029 - ProjectionBaseYear
 	if deathIdx <= 0 || deathIdx >= len(proj) {
@@ -56,7 +56,7 @@ func TestMortalityFilingAffectsSSTaxation(t *testing.T) {
 		t.Fatalf("expected single filing status post death")
 	}
 	// Compare taxable SS (approx by difference in federal tax relative to non-SS incomes not rigorous, just ensure SS benefits not zero)
-	if pre.SSBenefitRobert.Add(pre.SSBenefitDawn).IsZero() || post.SSBenefitRobert.Add(post.SSBenefitDawn).IsZero() {
+	if pre.SSBenefitPersonA.Add(pre.SSBenefitPersonB).IsZero() || post.SSBenefitPersonA.Add(post.SSBenefitPersonB).IsZero() {
 		t.Skip("SS not started yet in this simplified test")
 	}
 }

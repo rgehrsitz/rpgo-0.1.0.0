@@ -77,17 +77,22 @@ func (ce *CalculationEngine) SetLogger(l Logger) {
 
 // RunScenario calculates a complete retirement scenario
 func (ce *CalculationEngine) RunScenario(ctx context.Context, config *domain.Configuration, scenario *domain.Scenario) (*domain.ScenarioSummary, error) {
-	robert := config.PersonalDetails["robert"]
-	dawn := config.PersonalDetails["dawn"]
+	// Local neutral aliases to support incremental rename from human names to person_a/person_b
+	personAEmployee := config.PersonalDetails["person_a"]
+	personBEmployee := config.PersonalDetails["person_b"]
+
+	// Use neutral local variable names
+	personA := personAEmployee
+	personB := personBEmployee
 
 	// Validate retirement dates are after hire dates
-	if scenario.Robert.RetirementDate.Before(robert.HireDate) {
-		return nil, fmt.Errorf("robert's retirement date (%s) cannot be before hire date (%s)",
-			scenario.Robert.RetirementDate.Format("2006-01-02"), robert.HireDate.Format("2006-01-02"))
+	if scenario.PersonA.RetirementDate.Before(personA.HireDate) {
+		return nil, fmt.Errorf("person_a's retirement date (%s) cannot be before hire date (%s)",
+			scenario.PersonA.RetirementDate.Format("2006-01-02"), personA.HireDate.Format("2006-01-02"))
 	}
-	if scenario.Dawn.RetirementDate.Before(dawn.HireDate) {
-		return nil, fmt.Errorf("dawn's retirement date (%s) cannot be before hire date (%s)",
-			scenario.Dawn.RetirementDate.Format("2006-01-02"), dawn.HireDate.Format("2006-01-02"))
+	if scenario.PersonB.RetirementDate.Before(personB.HireDate) {
+		return nil, fmt.Errorf("person_b's retirement date (%s) cannot be before hire date (%s)",
+			scenario.PersonB.RetirementDate.Format("2006-01-02"), personB.HireDate.Format("2006-01-02"))
 	}
 
 	// Validate inflation and return rates are reasonable (allow deflation but cap extreme values)
@@ -97,7 +102,7 @@ func (ce *CalculationEngine) RunScenario(ctx context.Context, config *domain.Con
 	}
 
 	// Generate annual projections
-	projection := ce.GenerateAnnualProjection(&robert, &dawn, scenario, &config.GlobalAssumptions, config.GlobalAssumptions.FederalRules)
+	projection := ce.GenerateAnnualProjection(&personA, &personB, scenario, &config.GlobalAssumptions, config.GlobalAssumptions.FederalRules)
 
 	// Create scenario summary (guard Year5/Year10 for short projections)
 	first := decimal.Zero
@@ -119,7 +124,7 @@ func (ce *CalculationEngine) RunScenario(ctx context.Context, config *domain.Con
 	netIncome2040 := ce.getNetIncomeForYear(projection, 2040)
 
 	// Calculate pre-retirement baseline projections with COLA growth
-	currentNetIncome := ce.NetIncomeCalc.Calculate(&robert, &dawn, ce.Debug)
+	currentNetIncome := ce.NetIncomeCalc.Calculate(&personA, &personB, ce.Debug)
 	preRetirement2030 := ce.projectPreRetirementNetIncome(currentNetIncome, 2030, config.GlobalAssumptions.COLAGeneralRate)
 	preRetirement2035 := ce.projectPreRetirementNetIncome(currentNetIncome, 2035, config.GlobalAssumptions.COLAGeneralRate)
 	preRetirement2040 := ce.projectPreRetirementNetIncome(currentNetIncome, 2040, config.GlobalAssumptions.COLAGeneralRate)
@@ -160,8 +165,8 @@ func (ce *CalculationEngine) RunScenario(ctx context.Context, config *domain.Con
 
 	// Set initial and final TSP balances
 	if len(projection) > 0 {
-		summary.InitialTSPBalance = projection[0].TSPBalanceRobert.Add(projection[0].TSPBalanceDawn)
-		summary.FinalTSPBalance = projection[len(projection)-1].TSPBalanceRobert.Add(projection[len(projection)-1].TSPBalanceDawn)
+		summary.InitialTSPBalance = projection[0].TSPBalancePersonA.Add(projection[0].TSPBalancePersonB)
+		summary.FinalTSPBalance = projection[len(projection)-1].TSPBalancePersonA.Add(projection[len(projection)-1].TSPBalancePersonB)
 
 		// Calculate success rate for deterministic scenarios based on TSP sustainability
 		summary.SuccessRate = ce.calculateDeterministicSuccessRate(projection, summary.TSPLongevity)
@@ -206,8 +211,8 @@ func (ce *CalculationEngine) calculateDeterministicSuccessRate(projection []doma
 	// If TSP lasts the full projection period, success rate is 100%
 	if tspLongevity >= projectionLength {
 		// Additional check: TSP should be growing or stable, not just lasting
-		firstTSP := projection[0].TSPBalanceRobert.Add(projection[0].TSPBalanceDawn)
-		lastTSP := projection[projectionLength-1].TSPBalanceRobert.Add(projection[projectionLength-1].TSPBalanceDawn)
+		firstTSP := projection[0].TSPBalancePersonA.Add(projection[0].TSPBalancePersonB)
+		lastTSP := projection[projectionLength-1].TSPBalancePersonA.Add(projection[projectionLength-1].TSPBalancePersonB)
 
 		if lastTSP.GreaterThanOrEqual(firstTSP) {
 			return decimal.NewFromFloat(100.0) // 100% success - TSP lasted and grew
@@ -246,9 +251,9 @@ func (ce *CalculationEngine) RunScenarios(config *domain.Configuration) (*domain
 	}
 
 	// Calculate baseline (current net income)
-	robert := config.PersonalDetails["robert"]
-	dawn := config.PersonalDetails["dawn"]
-	baselineNetIncome := ce.NetIncomeCalc.Calculate(&robert, &dawn, ce.Debug)
+	personA := config.PersonalDetails["person_a"]
+	personB := config.PersonalDetails["person_b"]
+	baselineNetIncome := ce.NetIncomeCalc.Calculate(&personA, &personB, ce.Debug)
 
 	comparison := &domain.ScenarioComparison{
 		BaselineNetIncome: baselineNetIncome,
@@ -263,30 +268,30 @@ func (ce *CalculationEngine) RunScenarios(config *domain.Configuration) (*domain
 	return comparison, nil
 }
 
-func (nic *NetIncomeCalculator) Calculate(robert, dawn *domain.Employee, debug bool) decimal.Decimal {
+func (nic *NetIncomeCalculator) Calculate(personA, personB *domain.Employee, debug bool) decimal.Decimal {
 	// Calculate gross income
-	grossIncome := robert.CurrentSalary.Add(dawn.CurrentSalary)
+	grossIncome := personA.CurrentSalary.Add(personB.CurrentSalary)
 
-	// Calculate FEHB premiums (only Robert pays FEHB, Dawn has FSA-HC)
-	fehbPremium := robert.FEHBPremiumPerPayPeriod.Mul(decimal.NewFromInt(26)) // 26 pay periods per year
+	// Calculate FEHB premiums (only Person A pays FEHB, Person B has FSA-HC)
+	fehbPremium := personA.FEHBPremiumPerPayPeriod.Mul(decimal.NewFromInt(26)) // 26 pay periods per year
 
 	// Calculate TSP contributions (pre-tax)
-	tspContributions := robert.TotalAnnualTSPContribution().Add(dawn.TotalAnnualTSPContribution())
+	tspContributions := personA.TotalAnnualTSPContribution().Add(personB.TotalAnnualTSPContribution())
 
 	// Calculate taxes - use projection start date for age calculation
 	projectionStartYear := ProjectionBaseYear
 	projectionStartDate := time.Date(projectionStartYear, 1, 1, 0, 0, 0, 0, time.UTC)
-	ageRobert := robert.Age(projectionStartDate)
-	ageDawn := dawn.Age(projectionStartDate)
+	agePersonA := personA.Age(projectionStartDate)
+	agePersonB := personB.Age(projectionStartDate)
 
 	// Calculate taxes (excluding FICA for now, will calculate separately)
-	currentTaxableIncome := CalculateCurrentTaxableIncome(robert.CurrentSalary, dawn.CurrentSalary)
-	federalTax, stateTax, localTax, _ := nic.TaxCalc.CalculateTotalTaxes(currentTaxableIncome, false, ageRobert, ageDawn, grossIncome)
+	currentTaxableIncome := CalculateCurrentTaxableIncome(personA.CurrentSalary, personB.CurrentSalary)
+	federalTax, stateTax, localTax, _ := nic.TaxCalc.CalculateTotalTaxes(currentTaxableIncome, false, agePersonA, agePersonB, grossIncome)
 
 	// Calculate FICA taxes for each individual separately, as SS wage base applies per individual
-	robertFICA := nic.TaxCalc.FICATaxCalc.CalculateFICA(robert.CurrentSalary, robert.CurrentSalary)
-	dawnFICA := nic.TaxCalc.FICATaxCalc.CalculateFICA(dawn.CurrentSalary, dawn.CurrentSalary)
-	ficaTax := robertFICA.Add(dawnFICA)
+	personAFICA := nic.TaxCalc.FICATaxCalc.CalculateFICA(personA.CurrentSalary, personA.CurrentSalary)
+	personBFICA := nic.TaxCalc.FICATaxCalc.CalculateFICA(personB.CurrentSalary, personB.CurrentSalary)
+	ficaTax := personAFICA.Add(personBFICA)
 
 	// Calculate net income: gross - taxes - FEHB - TSP contributions
 	netIncome := grossIncome.Sub(federalTax).Sub(stateTax).Sub(localTax).Sub(ficaTax).Sub(fehbPremium).Sub(tspContributions)
@@ -295,8 +300,8 @@ func (nic *NetIncomeCalculator) Calculate(robert, dawn *domain.Employee, debug b
 	if debug {
 		nic.Logger.Debugf("CURRENT NET INCOME CALCULATION BREAKDOWN:")
 		nic.Logger.Debugf("=========================================")
-		nic.Logger.Debugf("Robert's Salary:        $%s", robert.CurrentSalary.StringFixed(2))
-		nic.Logger.Debugf("Dawn's Salary:          $%s", dawn.CurrentSalary.StringFixed(2))
+		nic.Logger.Debugf("PersonA's Salary:        $%s", personA.CurrentSalary.StringFixed(2))
+		nic.Logger.Debugf("PersonB's Salary:          $%s", personB.CurrentSalary.StringFixed(2))
 		nic.Logger.Debugf("Combined Gross Income:  $%s", grossIncome.StringFixed(2))
 		nic.Logger.Debugf("")
 		nic.Logger.Debugf("DEDUCTIONS:")
@@ -304,7 +309,7 @@ func (nic *NetIncomeCalculator) Calculate(robert, dawn *domain.Employee, debug b
 		nic.Logger.Debugf("  State Tax:            $%s", stateTax.StringFixed(2))
 		nic.Logger.Debugf("  Local Tax:            $%s", localTax.StringFixed(2))
 		nic.Logger.Debugf("  FICA Tax:             $%s", ficaTax.StringFixed(2))
-		nic.Logger.Debugf("  FEHB Premium (Robert): $%s", fehbPremium.StringFixed(2))
+		nic.Logger.Debugf("  FEHB Premium (PersonA): $%s", fehbPremium.StringFixed(2))
 		nic.Logger.Debugf("  TSP Contributions:    $%s", tspContributions.StringFixed(2))
 		nic.Logger.Debugf("  Total Deductions:     $%s", federalTax.Add(stateTax).Add(localTax).Add(ficaTax).Add(fehbPremium).Add(tspContributions).StringFixed(2))
 		nic.Logger.Debugf("")

@@ -8,25 +8,25 @@ import (
 
 // AnnualCashFlow represents the complete cash flow for a single year
 type AnnualCashFlow struct {
-	Year      int       `json:"year"`
-	Date      time.Time `json:"date"`
-	AgeRobert int       `json:"age_robert"`
-	AgeDawn   int       `json:"age_dawn"`
+	Year       int       `json:"year"`
+	Date       time.Time `json:"date"`
+	AgePersonA int       `json:"age_person_a"`
+	AgePersonB int       `json:"age_person_b"`
 
 	// Income Sources
-	SalaryRobert          decimal.Decimal `json:"salary_robert"`
-	SalaryDawn            decimal.Decimal `json:"salary_dawn"`
-	PensionRobert         decimal.Decimal `json:"pension_robert"`
-	PensionDawn           decimal.Decimal `json:"pension_dawn"`
-	SurvivorPensionRobert decimal.Decimal `json:"survivor_pension_robert"`
-	SurvivorPensionDawn   decimal.Decimal `json:"survivor_pension_dawn"`
-	TSPWithdrawalRobert   decimal.Decimal `json:"tsp_withdrawal_robert"`
-	TSPWithdrawalDawn     decimal.Decimal `json:"tsp_withdrawal_dawn"`
-	SSBenefitRobert       decimal.Decimal `json:"ss_benefit_robert"`
-	SSBenefitDawn         decimal.Decimal `json:"ss_benefit_dawn"`
-	FERSSupplementRobert  decimal.Decimal `json:"fers_supplement_robert"`
-	FERSSupplementDawn    decimal.Decimal `json:"fers_supplement_dawn"`
-	TotalGrossIncome      decimal.Decimal `json:"total_gross_income"`
+	SalaryPersonA          decimal.Decimal `json:"salary_person_a"`
+	SalaryPersonB          decimal.Decimal `json:"salary_person_b"`
+	PensionPersonA         decimal.Decimal `json:"pension_person_a"`
+	PensionPersonB         decimal.Decimal `json:"pension_person_b"`
+	SurvivorPensionPersonA decimal.Decimal `json:"survivor_pension_person_a"`
+	SurvivorPensionPersonB decimal.Decimal `json:"survivor_pension_person_b"`
+	TSPWithdrawalPersonA   decimal.Decimal `json:"tsp_withdrawal_person_a"`
+	TSPWithdrawalPersonB   decimal.Decimal `json:"tsp_withdrawal_person_b"`
+	SSBenefitPersonA       decimal.Decimal `json:"ss_benefit_person_a"`
+	SSBenefitPersonB       decimal.Decimal `json:"ss_benefit_person_b"`
+	FERSSupplementPersonA  decimal.Decimal `json:"fers_supplement_person_a"`
+	FERSSupplementPersonB  decimal.Decimal `json:"fers_supplement_person_b"`
+	TotalGrossIncome       decimal.Decimal `json:"total_gross_income"`
 
 	// Deductions and Taxes
 	FederalTax               decimal.Decimal `json:"federal_tax"`
@@ -43,8 +43,8 @@ type AnnualCashFlow struct {
 	NetIncome                decimal.Decimal `json:"net_income"`
 
 	// TSP Balances (end of year)
-	TSPBalanceRobert      decimal.Decimal `json:"tsp_balance_robert"`
-	TSPBalanceDawn        decimal.Decimal `json:"tsp_balance_dawn"`
+	TSPBalancePersonA     decimal.Decimal `json:"tsp_balance_person_a"`
+	TSPBalancePersonB     decimal.Decimal `json:"tsp_balance_person_b"`
 	TSPBalanceTraditional decimal.Decimal `json:"tsp_balance_traditional"`
 	TSPBalanceRoth        decimal.Decimal `json:"tsp_balance_roth"`
 
@@ -55,8 +55,8 @@ type AnnualCashFlow struct {
 	RMDAmount          decimal.Decimal `json:"rmd_amount"`
 
 	// Mortality / survivor tracking (Phase 1 deterministic death modeling)
-	RobertDeceased     bool `json:"robert_deceased"`
-	DawnDeceased       bool `json:"dawn_deceased"`
+	PersonADeceased    bool `json:"person_a_deceased"`
+	PersonBDeceased    bool `json:"person_b_deceased"`
 	FilingStatusSingle bool `json:"filing_status_single"` // true once survivor filing status applies
 }
 
@@ -174,12 +174,12 @@ type TaxableIncome struct {
 
 // CalculateTotalIncome calculates the total gross income for the year
 func (acf *AnnualCashFlow) CalculateTotalIncome() decimal.Decimal {
-	return acf.SalaryRobert.Add(acf.SalaryDawn).
-		Add(acf.PensionRobert).Add(acf.PensionDawn).
-		Add(acf.SurvivorPensionRobert).Add(acf.SurvivorPensionDawn).
-		Add(acf.TSPWithdrawalRobert).Add(acf.TSPWithdrawalDawn).
-		Add(acf.SSBenefitRobert).Add(acf.SSBenefitDawn).
-		Add(acf.FERSSupplementRobert).Add(acf.FERSSupplementDawn)
+	return acf.SalaryPersonA.Add(acf.SalaryPersonB).
+		Add(acf.PensionPersonA).Add(acf.PensionPersonB).
+		Add(acf.SurvivorPensionPersonA).Add(acf.SurvivorPensionPersonB).
+		Add(acf.TSPWithdrawalPersonA).Add(acf.TSPWithdrawalPersonB).
+		Add(acf.SSBenefitPersonA).Add(acf.SSBenefitPersonB).
+		Add(acf.FERSSupplementPersonA).Add(acf.FERSSupplementPersonB)
 }
 
 // CalculateTotalDeductions calculates the total deductions for the year
@@ -196,7 +196,7 @@ func (acf *AnnualCashFlow) CalculateNetIncome() decimal.Decimal {
 
 // TotalTSPBalance returns the combined TSP balance for both employees
 func (acf *AnnualCashFlow) TotalTSPBalance() decimal.Decimal {
-	return acf.TSPBalanceRobert.Add(acf.TSPBalanceDawn)
+	return acf.TSPBalancePersonA.Add(acf.TSPBalancePersonB)
 }
 
 // IsTSPDepleted returns true if TSP balances are zero or negative

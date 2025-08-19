@@ -12,22 +12,22 @@ import (
 
 // TestFullScenarioCalculation tests complete retirement scenario calculations
 func TestFullScenarioCalculation(t *testing.T) {
-	// Create test configuration based on Robert and Dawn's actual data
+	// Create test configuration based on example persons' data
 	config := createTestConfiguration()
 	engine := NewCalculationEngine()
 
 	t.Run("Scenario 1: Both Retire Early - Dec 2025", func(t *testing.T) {
 		scenario := &domain.Scenario{
 			Name: "Both Retire Early - Dec 2025",
-			Robert: domain.RetirementScenario{
-				EmployeeName:               "robert",
+			PersonA: domain.RetirementScenario{
+				EmployeeName:               "person_a",
 				RetirementDate:             time.Date(2025, 12, 1, 0, 0, 0, 0, time.UTC),
 				SSStartAge:                 62,
 				TSPWithdrawalStrategy:      "4_percent_rule",
 				TSPWithdrawalTargetMonthly: &[]decimal.Decimal{decimal.NewFromInt(2000)}[0],
 			},
-			Dawn: domain.RetirementScenario{
-				EmployeeName:               "dawn",
+			PersonB: domain.RetirementScenario{
+				EmployeeName:               "person_b",
 				RetirementDate:             time.Date(2025, 8, 30, 0, 0, 0, 0, time.UTC),
 				SSStartAge:                 62,
 				TSPWithdrawalStrategy:      "4_percent_rule",
@@ -54,30 +54,30 @@ func TestFullScenarioCalculation(t *testing.T) {
 
 		// First year should show mixed income (partial work + partial retirement)
 		firstYear := result.Projection[0]
-		assert.True(t, firstYear.SalaryRobert.GreaterThan(decimal.Zero),
-			"Robert should have some salary income in first year")
-		assert.True(t, firstYear.PensionRobert.GreaterThan(decimal.Zero),
-			"Robert should have some pension income in first year")
-		assert.True(t, firstYear.PensionDawn.GreaterThan(decimal.Zero),
-			"Dawn should have pension income in first year")
+		assert.True(t, firstYear.SalaryPersonA.GreaterThan(decimal.Zero),
+			"PersonA should have some salary income in first year")
+		assert.True(t, firstYear.PensionPersonA.GreaterThan(decimal.Zero),
+			"PersonA should have some pension income in first year")
+		assert.True(t, firstYear.PensionPersonB.GreaterThan(decimal.Zero),
+			"PersonB should have pension income in first year")
 
 		// Verify ages are calculated correctly
-		assert.Equal(t, 59, firstYear.AgeRobert, "Robert should be 59 in 2025")
-		assert.Equal(t, 61, firstYear.AgeDawn, "Dawn should be 61 in 2025")
+		assert.Equal(t, 59, firstYear.AgePersonA, "PersonA should be 59 in 2025")
+		assert.Equal(t, 61, firstYear.AgePersonB, "PersonB should be 61 in 2025")
 	})
 
-	t.Run("Scenario 2: Both Retire at Robert's 62 - Feb 2027", func(t *testing.T) {
+	t.Run("Scenario 2: Both Retire at PersonA 62 - Feb 2027", func(t *testing.T) {
 		scenario := &domain.Scenario{
-			Name: "Both Retire at Robert's 62 - Feb 2027",
-			Robert: domain.RetirementScenario{
-				EmployeeName:               "robert",
+			Name: "Both Retire at PersonA 62 - Feb 2027",
+			PersonA: domain.RetirementScenario{
+				EmployeeName:               "person_a",
 				RetirementDate:             time.Date(2027, 2, 28, 0, 0, 0, 0, time.UTC),
 				SSStartAge:                 62,
 				TSPWithdrawalStrategy:      "4_percent_rule",
 				TSPWithdrawalTargetMonthly: &[]decimal.Decimal{decimal.NewFromInt(2000)}[0],
 			},
-			Dawn: domain.RetirementScenario{
-				EmployeeName:               "dawn",
+			PersonB: domain.RetirementScenario{
+				EmployeeName:               "person_b",
 				RetirementDate:             time.Date(2025, 8, 30, 0, 0, 0, 0, time.UTC),
 				SSStartAge:                 62,
 				TSPWithdrawalStrategy:      "4_percent_rule",
@@ -97,18 +97,18 @@ func TestFullScenarioCalculation(t *testing.T) {
 		assert.True(t, result.TSPLongevity >= 20,
 			"TSP should last at least 20 years: %d years", result.TSPLongevity)
 
-		// Check the year when Robert actually retires (2027 = year 2 in projection)
+		// Check the year when PersonA actually retires (2027 = year 2 in projection)
 		if len(result.Projection) >= 3 {
 			retirementYear := result.Projection[2] // 2027
-			assert.Equal(t, 61, retirementYear.AgeRobert, "Robert should be 61 in 2027")
-			assert.Equal(t, 63, retirementYear.AgeDawn, "Dawn should be 63 in 2027")
+			assert.Equal(t, 61, retirementYear.AgePersonA, "PersonA should be 61 in 2027")
+			assert.Equal(t, 63, retirementYear.AgePersonB, "PersonB should be 63 in 2027")
 
-			// Robert should have enhanced multiplier at age 62 in the following year
+			// PersonA should have enhanced multiplier at age 62 in the following year
 			if len(result.Projection) >= 4 {
 				postRetirement := result.Projection[3] // 2028
-				assert.Equal(t, 62, postRetirement.AgeRobert, "Robert should be 62 in 2028")
-				assert.True(t, postRetirement.PensionRobert.GreaterThan(decimal.NewFromInt(70000)),
-					"Robert should have enhanced pension at 62: %s", postRetirement.PensionRobert.StringFixed(2))
+				assert.Equal(t, 62, postRetirement.AgePersonA, "PersonA should be 62 in 2028")
+				assert.True(t, postRetirement.PensionPersonA.GreaterThan(decimal.NewFromInt(70000)),
+					"PersonA should have enhanced pension at 62: %s", postRetirement.PensionPersonA.StringFixed(2))
 			}
 		}
 	})
@@ -159,7 +159,7 @@ func TestErrorConditions(t *testing.T) {
 		config := createTestConfiguration()
 		scenario := &domain.Scenario{
 			Name: "Invalid Scenario",
-			Robert: domain.RetirementScenario{
+			PersonA: domain.RetirementScenario{
 				RetirementDate: time.Date(1980, 1, 1, 0, 0, 0, 0, time.UTC), // Before hire date
 			},
 		}
@@ -176,10 +176,10 @@ func TestErrorConditions(t *testing.T) {
 
 		scenario := &domain.Scenario{
 			Name: "Extreme Inflation Scenario",
-			Robert: domain.RetirementScenario{
+			PersonA: domain.RetirementScenario{
 				RetirementDate: time.Date(2025, 12, 1, 0, 0, 0, 0, time.UTC),
 			},
-			Dawn: domain.RetirementScenario{
+			PersonB: domain.RetirementScenario{
 				RetirementDate: time.Date(2025, 8, 30, 0, 0, 0, 0, time.UTC),
 			},
 		}
@@ -196,10 +196,10 @@ func TestErrorConditions(t *testing.T) {
 
 		scenario := &domain.Scenario{
 			Name: "Historical Deflation Scenario",
-			Robert: domain.RetirementScenario{
+			PersonA: domain.RetirementScenario{
 				RetirementDate: time.Date(2025, 12, 1, 0, 0, 0, 0, time.UTC),
 			},
-			Dawn: domain.RetirementScenario{
+			PersonB: domain.RetirementScenario{
 				RetirementDate: time.Date(2025, 8, 30, 0, 0, 0, 0, time.UTC),
 			},
 		}
@@ -234,11 +234,11 @@ func TestRealWorldDataValidation(t *testing.T) {
 	engine := NewCalculationEngineWithConfig(config.GlobalAssumptions.FederalRules)
 
 	// Test current net income calculation
-	robert := config.PersonalDetails["robert"]
-	dawn := config.PersonalDetails["dawn"]
+	personA := config.PersonalDetails["person_a"]
+	personB := config.PersonalDetails["person_b"]
 	currentNetIncome := engine.NetIncomeCalc.Calculate(
-		&robert,
-		&dawn,
+		&personA,
+		&personB,
 		engine.Debug,
 	)
 
@@ -249,29 +249,29 @@ func TestRealWorldDataValidation(t *testing.T) {
 		currentNetIncome.StringFixed(2))
 
 	// Test individual component calculations
-	// robert and dawn already defined above
+	// personA and personB already defined above
 
-	// Test Robert's pension calculation
-	robertPension := CalculateFERSPension(&robert, time.Date(2025, 12, 1, 0, 0, 0, 0, time.UTC))
-	expectedRobertPension := decimal.NewFromFloat(73045.31) // From debug output
-	assert.True(t, robertPension.ReducedPension.Sub(expectedRobertPension).Abs().LessThan(decimal.NewFromInt(1)),
-		"Robert's pension should match expected: Expected %s, got %s",
-		expectedRobertPension.StringFixed(2), robertPension.ReducedPension.StringFixed(2))
+	// Test PersonA's pension calculation
+	personAPension := CalculateFERSPension(&personA, time.Date(2025, 12, 1, 0, 0, 0, 0, time.UTC))
+	expectedPersonAPension := decimal.NewFromFloat(73045.31) // From debug output
+	assert.True(t, personAPension.ReducedPension.Sub(expectedPersonAPension).Abs().LessThan(decimal.NewFromInt(1)),
+		"PersonA's pension should match expected: Expected %s, got %s",
+		expectedPersonAPension.StringFixed(2), personAPension.ReducedPension.StringFixed(2))
 
-	// Test Dawn's pension calculation
-	dawnPension := CalculateFERSPension(&dawn, time.Date(2025, 8, 30, 0, 0, 0, 0, time.UTC))
-	expectedDawnPension := decimal.NewFromFloat(55262.40) // Calculated: 30.6 * 164000 * 0.011
-	assert.True(t, dawnPension.ReducedPension.Sub(expectedDawnPension).Abs().LessThan(decimal.NewFromInt(1000)),
-		"Dawn's pension should be close to expected: Expected ~%s, got %s",
-		expectedDawnPension.StringFixed(2), dawnPension.ReducedPension.StringFixed(2))
+	// Test PersonB's pension calculation
+	personBPension := CalculateFERSPension(&personB, time.Date(2025, 8, 30, 0, 0, 0, 0, time.UTC))
+	expectedPersonBPension := decimal.NewFromFloat(55262.40) // Calculated: 30.6 * 164000 * 0.011
+	assert.True(t, personBPension.ReducedPension.Sub(expectedPersonBPension).Abs().LessThan(decimal.NewFromInt(1000)),
+		"PersonB's pension should be close to expected: Expected ~%s, got %s",
+		expectedPersonBPension.StringFixed(2), personBPension.ReducedPension.StringFixed(2))
 
 	// Test TSP 4% rule calculations
-	robertTSP := NewFourPercentRule(robert.TSPBalanceTraditional, config.GlobalAssumptions.InflationRate)
-	robertFirstWithdrawal := robertTSP.CalculateWithdrawal(robert.TSPBalanceTraditional, 1, decimal.Zero, 60, false, decimal.Zero)
-	expectedRobertWithdrawal := decimal.NewFromFloat(78646.75) // 1966168.86 * 0.04
-	assert.True(t, robertFirstWithdrawal.Sub(expectedRobertWithdrawal).Abs().LessThan(decimal.NewFromInt(1)),
-		"Robert's TSP withdrawal should match 4%% rule: Expected %s, got %s",
-		expectedRobertWithdrawal.StringFixed(2), robertFirstWithdrawal.StringFixed(2))
+	personATSP := NewFourPercentRule(personA.TSPBalanceTraditional, config.GlobalAssumptions.InflationRate)
+	personAFirstWithdrawal := personATSP.CalculateWithdrawal(personA.TSPBalanceTraditional, 1, decimal.Zero, 60, false, decimal.Zero)
+	expectedPersonAWithdrawal := decimal.NewFromFloat(78646.75) // 1966168.86 * 0.04
+	assert.True(t, personAFirstWithdrawal.Sub(expectedPersonAWithdrawal).Abs().LessThan(decimal.NewFromInt(1)),
+		"PersonA's TSP withdrawal should match 4%% rule: Expected %s, got %s",
+		expectedPersonAWithdrawal.StringFixed(2), personAFirstWithdrawal.StringFixed(2))
 }
 
 // TestProjectionConsistency tests that projections are internally consistent
@@ -281,14 +281,14 @@ func TestProjectionConsistency(t *testing.T) {
 
 	scenario := &domain.Scenario{
 		Name: "Consistency Test",
-		Robert: domain.RetirementScenario{
-			EmployeeName:          "robert",
+		PersonA: domain.RetirementScenario{
+			EmployeeName:          "person_a",
 			RetirementDate:        time.Date(2025, 12, 1, 0, 0, 0, 0, time.UTC),
 			SSStartAge:            62,
 			TSPWithdrawalStrategy: "4_percent_rule",
 		},
-		Dawn: domain.RetirementScenario{
-			EmployeeName:          "dawn",
+		PersonB: domain.RetirementScenario{
+			EmployeeName:          "person_b",
 			RetirementDate:        time.Date(2025, 8, 30, 0, 0, 0, 0, time.UTC),
 			SSStartAge:            62,
 			TSPWithdrawalStrategy: "4_percent_rule",
@@ -304,18 +304,18 @@ func TestProjectionConsistency(t *testing.T) {
 		// Ages should increase by 1 each year
 		if i > 0 {
 			prevYear := result.Projection[i-1]
-			assert.Equal(t, prevYear.AgeRobert+1, year.AgeRobert,
-				"Robert's age should increase by 1 each year")
-			assert.Equal(t, prevYear.AgeDawn+1, year.AgeDawn,
-				"Dawn's age should increase by 1 each year")
+			assert.Equal(t, prevYear.AgePersonA+1, year.AgePersonA,
+				"PersonA age should increase by 1 each year")
+			assert.Equal(t, prevYear.AgePersonB+1, year.AgePersonB,
+				"PersonB age should increase by 1 each year")
 		}
 
 		// Total gross income should equal sum of components
-		calculatedGross := year.SalaryRobert.Add(year.SalaryDawn).
-			Add(year.PensionRobert).Add(year.PensionDawn).
-			Add(year.TSPWithdrawalRobert).Add(year.TSPWithdrawalDawn).
-			Add(year.SSBenefitRobert).Add(year.SSBenefitDawn).
-			Add(year.FERSSupplementRobert).Add(year.FERSSupplementDawn)
+		calculatedGross := year.SalaryPersonA.Add(year.SalaryPersonB).
+			Add(year.PensionPersonA).Add(year.PensionPersonB).
+			Add(year.TSPWithdrawalPersonA).Add(year.TSPWithdrawalPersonB).
+			Add(year.SSBenefitPersonA).Add(year.SSBenefitPersonB).
+			Add(year.FERSSupplementPersonA).Add(year.FERSSupplementPersonB)
 
 		assert.True(t, calculatedGross.Sub(year.TotalGrossIncome).Abs().LessThan(decimal.NewFromFloat(0.01)),
 			"Year %d: Total gross income should equal sum of components: Calculated %s, Stored %s",
@@ -331,17 +331,17 @@ func TestProjectionConsistency(t *testing.T) {
 			i+1, expectedNet.StringFixed(2), year.NetIncome.StringFixed(2))
 
 		// TSP balances should never go negative
-		assert.True(t, year.TSPBalanceRobert.GreaterThanOrEqual(decimal.Zero),
-			"Year %d: Robert's TSP balance should not be negative: %s", i+1, year.TSPBalanceRobert.StringFixed(2))
-		assert.True(t, year.TSPBalanceDawn.GreaterThanOrEqual(decimal.Zero),
-			"Year %d: Dawn's TSP balance should not be negative: %s", i+1, year.TSPBalanceDawn.StringFixed(2))
+		assert.True(t, year.TSPBalancePersonA.GreaterThanOrEqual(decimal.Zero),
+			"Year %d: PersonA TSP balance should not be negative: %s", i+1, year.TSPBalancePersonA.StringFixed(2))
+		assert.True(t, year.TSPBalancePersonB.GreaterThanOrEqual(decimal.Zero),
+			"Year %d: PersonB TSP balance should not be negative: %s", i+1, year.TSPBalancePersonB.StringFixed(2))
 
 		// After retirement, salaries should be zero
 		if year.IsRetired && i > 0 { // Skip first year as it may be partial retirement year
-			assert.True(t, year.SalaryRobert.Equal(decimal.Zero),
-				"Year %d: Robert's salary should be zero when retired", i+1)
-			assert.True(t, year.SalaryDawn.Equal(decimal.Zero),
-				"Year %d: Dawn's salary should be zero when retired", i+1)
+			assert.True(t, year.SalaryPersonA.Equal(decimal.Zero),
+				"Year %d: PersonA salary should be zero when retired", i+1)
+			assert.True(t, year.SalaryPersonB.Equal(decimal.Zero),
+				"Year %d: PersonB salary should be zero when retired", i+1)
 			assert.True(t, year.TSPContributions.Equal(decimal.Zero),
 				"Year %d: TSP contributions should be zero when retired", i+1)
 			assert.True(t, year.FICATax.Equal(decimal.Zero),
@@ -350,12 +350,12 @@ func TestProjectionConsistency(t *testing.T) {
 	}
 }
 
-// createTestConfiguration creates a test configuration based on Robert and Dawn's actual data
+// createTestConfiguration creates a test configuration based on PersonA and PersonB's data
 func createTestConfiguration() *domain.Configuration {
 	return &domain.Configuration{
 		PersonalDetails: map[string]domain.Employee{
-			"robert": {
-				Name:                           "Robert F. Gehrsitz",
+			"person_a": {
+				Name:                           "Person A",
 				BirthDate:                      time.Date(1965, 2, 25, 0, 0, 0, 0, time.UTC),
 				HireDate:                       time.Date(1987, 6, 22, 0, 0, 0, 0, time.UTC),
 				CurrentSalary:                  decimal.NewFromFloat(190779.00),
@@ -369,8 +369,8 @@ func createTestConfiguration() *domain.Configuration {
 				FEHBPremiumPerPayPeriod:        decimal.NewFromFloat(488.49),
 				SurvivorBenefitElectionPercent: decimal.Zero,
 			},
-			"dawn": {
-				Name:                           "Dawn M. Gehrsitz",
+			"person_b": {
+				Name:                           "Person B",
 				BirthDate:                      time.Date(1963, 7, 31, 0, 0, 0, 0, time.UTC),
 				HireDate:                       time.Date(1995, 7, 11, 0, 0, 0, 0, time.UTC),
 				CurrentSalary:                  decimal.NewFromFloat(176620.00),
@@ -381,7 +381,7 @@ func createTestConfiguration() *domain.Configuration {
 				SSBenefit62:                    decimal.NewFromInt(2527),
 				SSBenefitFRA:                   decimal.NewFromInt(3826),
 				SSBenefit70:                    decimal.NewFromInt(4860),
-				FEHBPremiumPerPayPeriod:        decimal.Zero, // Dawn has FSA-HC instead
+				FEHBPremiumPerPayPeriod:        decimal.Zero, // Person B has FSA-HC instead
 				SurvivorBenefitElectionPercent: decimal.Zero,
 			},
 		},
@@ -501,15 +501,15 @@ func createTestConfiguration() *domain.Configuration {
 		Scenarios: []domain.Scenario{
 			{
 				Name: "Both Retire Early - Dec 2025",
-				Robert: domain.RetirementScenario{
-					EmployeeName:               "robert",
+				PersonA: domain.RetirementScenario{
+					EmployeeName:               "person_a",
 					RetirementDate:             time.Date(2025, 12, 1, 0, 0, 0, 0, time.UTC),
 					SSStartAge:                 62,
 					TSPWithdrawalStrategy:      "4_percent_rule",
 					TSPWithdrawalTargetMonthly: &[]decimal.Decimal{decimal.NewFromInt(2000)}[0],
 				},
-				Dawn: domain.RetirementScenario{
-					EmployeeName:               "dawn",
+				PersonB: domain.RetirementScenario{
+					EmployeeName:               "person_b",
 					RetirementDate:             time.Date(2025, 8, 30, 0, 0, 0, 0, time.UTC),
 					SSStartAge:                 62,
 					TSPWithdrawalStrategy:      "4_percent_rule",
@@ -517,16 +517,16 @@ func createTestConfiguration() *domain.Configuration {
 				},
 			},
 			{
-				Name: "Both Retire at Robert's 62 - Feb 2027",
-				Robert: domain.RetirementScenario{
-					EmployeeName:               "robert",
+				Name: "Both Retire at Person A's 62 - Feb 2027",
+				PersonA: domain.RetirementScenario{
+					EmployeeName:               "person_a",
 					RetirementDate:             time.Date(2027, 2, 28, 0, 0, 0, 0, time.UTC),
 					SSStartAge:                 62,
 					TSPWithdrawalStrategy:      "4_percent_rule",
 					TSPWithdrawalTargetMonthly: &[]decimal.Decimal{decimal.NewFromInt(2000)}[0],
 				},
-				Dawn: domain.RetirementScenario{
-					EmployeeName:               "dawn",
+				PersonB: domain.RetirementScenario{
+					EmployeeName:               "person_b",
 					RetirementDate:             time.Date(2025, 8, 30, 0, 0, 0, 0, time.UTC),
 					SSStartAge:                 62,
 					TSPWithdrawalStrategy:      "4_percent_rule",

@@ -61,16 +61,16 @@ func (c ConsoleVerboseFormatter) Format(results *domain.ScenarioComparison) ([]b
 			fmt.Fprintln(&buf, "(Note: Amounts shown are current-year cash received - may be partial year)")
 			fmt.Fprintln(&buf, "----------------------------------------")
 			fmt.Fprintln(&buf, "INCOME SOURCES:")
-			fmt.Fprintf(&buf, "  Robert's Salary:        %s\n", FormatCurrency(firstRetirementYear.SalaryRobert))
-			fmt.Fprintf(&buf, "  Dawn's Salary:          %s\n", FormatCurrency(firstRetirementYear.SalaryDawn))
-			fmt.Fprintf(&buf, "  Robert's FERS Pension:  %s\n", FormatCurrency(firstRetirementYear.PensionRobert))
-			fmt.Fprintf(&buf, "  Dawn's FERS Pension:    %s\n", FormatCurrency(firstRetirementYear.PensionDawn))
-			fmt.Fprintf(&buf, "  Robert's TSP Withdrawal: %s\n", FormatCurrency(firstRetirementYear.TSPWithdrawalRobert))
-			fmt.Fprintf(&buf, "  Dawn's TSP Withdrawal:   %s\n", FormatCurrency(firstRetirementYear.TSPWithdrawalDawn))
-			fmt.Fprintf(&buf, "  Robert's Social Security: %s\n", FormatCurrency(firstRetirementYear.SSBenefitRobert))
-			fmt.Fprintf(&buf, "  Dawn's Social Security:   %s\n", FormatCurrency(firstRetirementYear.SSBenefitDawn))
-			fmt.Fprintf(&buf, "  Robert's FERS SRS:       %s\n", FormatCurrency(firstRetirementYear.FERSSupplementRobert))
-			fmt.Fprintf(&buf, "  Dawn's FERS SRS:         %s\n", FormatCurrency(firstRetirementYear.FERSSupplementDawn))
+			fmt.Fprintf(&buf, "  PersonA Salary:        %s\n", FormatCurrency(firstRetirementYear.SalaryPersonA))
+			fmt.Fprintf(&buf, "  PersonB Salary:          %s\n", FormatCurrency(firstRetirementYear.SalaryPersonB))
+			fmt.Fprintf(&buf, "  PersonA FERS Pension:  %s\n", FormatCurrency(firstRetirementYear.PensionPersonA))
+			fmt.Fprintf(&buf, "  PersonB FERS Pension:    %s\n", FormatCurrency(firstRetirementYear.PensionPersonB))
+			fmt.Fprintf(&buf, "  PersonA TSP Withdrawal: %s\n", FormatCurrency(firstRetirementYear.TSPWithdrawalPersonA))
+			fmt.Fprintf(&buf, "  PersonB TSP Withdrawal:   %s\n", FormatCurrency(firstRetirementYear.TSPWithdrawalPersonB))
+			fmt.Fprintf(&buf, "  PersonA Social Security: %s\n", FormatCurrency(firstRetirementYear.SSBenefitPersonA))
+			fmt.Fprintf(&buf, "  PersonB Social Security:   %s\n", FormatCurrency(firstRetirementYear.SSBenefitPersonB))
+			fmt.Fprintf(&buf, "  PersonA FERS SRS:       %s\n", FormatCurrency(firstRetirementYear.FERSSupplementPersonA))
+			fmt.Fprintf(&buf, "  PersonB FERS SRS:         %s\n", FormatCurrency(firstRetirementYear.FERSSupplementPersonB))
 			fmt.Fprintf(&buf, "  TOTAL GROSS INCOME:      %s\n", FormatCurrency(firstRetirementYear.TotalGrossIncome))
 			fmt.Fprintln(&buf)
 			fmt.Fprintln(&buf, "DEDUCTIONS & TAXES:")
@@ -104,8 +104,8 @@ func (c ConsoleVerboseFormatter) Format(results *domain.ScenarioComparison) ([]b
 			fmt.Fprintf(&buf, "  Is Retired:             %t\n", firstRetirementYear.IsRetired)
 			fmt.Fprintf(&buf, "  Medicare Eligible:      %t\n", firstRetirementYear.IsMedicareEligible)
 			fmt.Fprintf(&buf, "  RMD Year:               %t\n", firstRetirementYear.IsRMDYear)
-			fmt.Fprintf(&buf, "  Robert's Age:           %d\n", firstRetirementYear.AgeRobert)
-			fmt.Fprintf(&buf, "  Dawn's Age:             %d\n", firstRetirementYear.AgeDawn)
+			fmt.Fprintf(&buf, "  PersonA Age:           %d\n", firstRetirementYear.AgePersonA)
+			fmt.Fprintf(&buf, "  PersonB Age:             %d\n", firstRetirementYear.AgePersonB)
 			fmt.Fprintln(&buf)
 		}
 
@@ -125,7 +125,7 @@ func (c ConsoleVerboseFormatter) Format(results *domain.ScenarioComparison) ([]b
 	if rec.ScenarioName != "" {
 		fmt.Fprintln(&buf, "SUMMARY & RECOMMENDATIONS")
 		fmt.Fprintln(&buf, "=========================")
-		fmt.Fprintf(&buf, "Best scenario for Robert: %s\n", rec.ScenarioName)
+		fmt.Fprintf(&buf, "Best scenario: %s\n", rec.ScenarioName)
 		fmt.Fprintf(&buf, "Take-Home Income Change: %s (%s)\n", FormatCurrency(rec.NetIncomeChange), FormatPercentage(rec.PercentageChange))
 		fmt.Fprintf(&buf, "Monthly Change: %s\n", FormatCurrency(rec.NetIncomeChange.Div(decimal.NewFromInt(12))))
 	}
@@ -149,12 +149,12 @@ func writeDetailedComparison(buf *bytes.Buffer, results *domain.ScenarioComparis
 		if firstRetirementYear == nil {
 			continue
 		}
-		// descriptive title
+		// descriptive title (neutralized to PersonA/PersonB)
 		var title string
 		if strings.Contains(scenario.Name, "Dec 2025") {
-			title = fmt.Sprintf("SCENARIO %d: Dawn Aug 2025, Robert Dec 2025", i+1)
+			title = fmt.Sprintf("SCENARIO %d: PersonB Aug 2025, PersonA Dec 2025", i+1)
 		} else {
-			title = fmt.Sprintf("SCENARIO %d: Dawn Aug 2025, Robert Feb 2027", i+1)
+			title = fmt.Sprintf("SCENARIO %d: PersonB Aug 2025, PersonA Feb 2027", i+1)
 		}
 		fmt.Fprintf(buf, "\n%s\n", title)
 		fmt.Fprintln(buf, strings.Repeat("=", len(title)))
@@ -164,11 +164,11 @@ func writeDetailedComparison(buf *bytes.Buffer, results *domain.ScenarioComparis
 		workingGross := decimal.NewFromFloat(367399.00)
 		workingNet := results.BaselineNetIncome
 		fmt.Fprintln(buf, "INCOME SOURCES:")
-		cmpLine(buf, "  Salary (Robert + Dawn)", workingGross, firstRetirementYear.SalaryRobert.Add(firstRetirementYear.SalaryDawn))
-		cmpLine(buf, "  FERS Pension", decimal.Zero, firstRetirementYear.PensionRobert.Add(firstRetirementYear.PensionDawn))
-		cmpLine(buf, "  TSP Withdrawals", decimal.Zero, firstRetirementYear.TSPWithdrawalRobert.Add(firstRetirementYear.TSPWithdrawalDawn))
-		cmpLine(buf, "  Social Security", decimal.Zero, firstRetirementYear.SSBenefitRobert.Add(firstRetirementYear.SSBenefitDawn))
-		cmpLine(buf, "  FERS Supplement", decimal.Zero, firstRetirementYear.FERSSupplementRobert.Add(firstRetirementYear.FERSSupplementDawn))
+		cmpLine(buf, "  Salary (PersonA + PersonB)", workingGross, firstRetirementYear.SalaryPersonA.Add(firstRetirementYear.SalaryPersonB))
+		cmpLine(buf, "  FERS Pension", decimal.Zero, firstRetirementYear.PensionPersonA.Add(firstRetirementYear.PensionPersonB))
+		cmpLine(buf, "  TSP Withdrawals", decimal.Zero, firstRetirementYear.TSPWithdrawalPersonA.Add(firstRetirementYear.TSPWithdrawalPersonB))
+		cmpLine(buf, "  Social Security", decimal.Zero, firstRetirementYear.SSBenefitPersonA.Add(firstRetirementYear.SSBenefitPersonB))
+		cmpLine(buf, "  FERS Supplement", decimal.Zero, firstRetirementYear.FERSSupplementPersonA.Add(firstRetirementYear.FERSSupplementPersonB))
 		fmt.Fprintln(buf, strings.Repeat("-", 80))
 		cmpLine(buf, "TOTAL GROSS INCOME", workingGross, firstRetirementYear.TotalGrossIncome)
 		fmt.Fprintln(buf)
@@ -199,11 +199,11 @@ func writeDetailedComparison(buf *bytes.Buffer, results *domain.ScenarioComparis
 		fmt.Fprintln(buf, "KEY INSIGHTS:")
 		fmt.Fprintf(buf, "• Working income is reduced by $%.2f in TSP contributions\n", workingTSP.InexactFloat64())
 		fmt.Fprintf(buf, "• Working income is reduced by $%.2f in FICA taxes\n", workingFICA.InexactFloat64())
-		fmt.Fprintf(buf, "• Retirement adds $%.2f in pension income\n", firstRetirementYear.PensionRobert.Add(firstRetirementYear.PensionDawn).InexactFloat64())
-		fmt.Fprintf(buf, "• Retirement adds $%.2f in TSP withdrawals\n", firstRetirementYear.TSPWithdrawalRobert.Add(firstRetirementYear.TSPWithdrawalDawn).InexactFloat64())
-		fmt.Fprintf(buf, "• Retirement adds $%.2f in Social Security\n", firstRetirementYear.SSBenefitRobert.Add(firstRetirementYear.SSBenefitDawn).InexactFloat64())
-		if firstRetirementYear.FERSSupplementRobert.Add(firstRetirementYear.FERSSupplementDawn).GreaterThan(decimal.Zero) {
-			fmt.Fprintf(buf, "• Retirement adds $%.2f in FERS supplement\n", firstRetirementYear.FERSSupplementRobert.Add(firstRetirementYear.FERSSupplementDawn).InexactFloat64())
+		fmt.Fprintf(buf, "• Retirement adds $%.2f in pension income\n", firstRetirementYear.PensionPersonA.Add(firstRetirementYear.PensionPersonB).InexactFloat64())
+		fmt.Fprintf(buf, "• Retirement adds $%.2f in TSP withdrawals\n", firstRetirementYear.TSPWithdrawalPersonA.Add(firstRetirementYear.TSPWithdrawalPersonB).InexactFloat64())
+		fmt.Fprintf(buf, "• Retirement adds $%.2f in Social Security\n", firstRetirementYear.SSBenefitPersonA.Add(firstRetirementYear.SSBenefitPersonB).InexactFloat64())
+		if firstRetirementYear.FERSSupplementPersonA.Add(firstRetirementYear.FERSSupplementPersonB).GreaterThan(decimal.Zero) {
+			fmt.Fprintf(buf, "• Retirement adds $%.2f in FERS supplement\n", firstRetirementYear.FERSSupplementPersonA.Add(firstRetirementYear.FERSSupplementPersonB).InexactFloat64())
 		}
 		fmt.Fprintf(buf, "\nNet Effect: %s (%s)\n", FormatCurrency(netDiff), FormatPercentage(percentChange))
 		fmt.Fprintln(buf)

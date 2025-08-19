@@ -278,8 +278,8 @@ func TestFERSMonteCarloErrorHandling(t *testing.T) {
 func createFERSMonteCarloTestConfiguration() *domain.Configuration {
 	return &domain.Configuration{
 		PersonalDetails: map[string]domain.Employee{
-			"robert": {
-				Name:                    "Robert",
+			"person_a": {
+				Name:                    "Person A",
 				CurrentSalary:           decimal.NewFromFloat(100000),
 				High3Salary:             decimal.NewFromFloat(100000),
 				TSPBalanceTraditional:   decimal.NewFromFloat(500000),
@@ -290,8 +290,8 @@ func createFERSMonteCarloTestConfiguration() *domain.Configuration {
 				SSBenefit70:             decimal.NewFromFloat(3100),
 				FEHBPremiumPerPayPeriod: decimal.NewFromFloat(500),
 			},
-			"dawn": {
-				Name:                    "Dawn",
+			"person_b": {
+				Name:                    "Person B",
 				CurrentSalary:           decimal.NewFromFloat(80000),
 				High3Salary:             decimal.NewFromFloat(80000),
 				TSPBalanceTraditional:   decimal.NewFromFloat(300000),
@@ -318,13 +318,13 @@ func createFERSMonteCarloTestConfiguration() *domain.Configuration {
 		Scenarios: []domain.Scenario{
 			{
 				Name: "Test Scenario",
-				Robert: domain.RetirementScenario{
-					EmployeeName:          "robert",
+				PersonA: domain.RetirementScenario{
+					EmployeeName:          "person_a",
 					SSStartAge:            62,
 					TSPWithdrawalStrategy: "4_percent_rule",
 				},
-				Dawn: domain.RetirementScenario{
-					EmployeeName:          "dawn",
+				PersonB: domain.RetirementScenario{
+					EmployeeName:          "person_b",
 					SSStartAge:            62,
 					TSPWithdrawalStrategy: "4_percent_rule",
 				},

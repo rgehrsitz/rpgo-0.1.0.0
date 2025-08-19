@@ -54,7 +54,7 @@ func main() {
 		row := fmt.Sprintf("%d,%s,%d", idx, res.Scenarios[0].Projection[idx].Date.Format("2006-01-02"), res.Scenarios[0].Projection[idx].Date.Year())
 		for sidx := range res.Scenarios {
 			p := res.Scenarios[sidx].Projection[idx]
-			row += fmt.Sprintf(",%s,%s,%s,%s,%s", p.SalaryRobert.Add(p.SalaryDawn).StringFixed(0), p.PensionRobert.Add(p.PensionDawn).StringFixed(0), p.TSPWithdrawalRobert.Add(p.TSPWithdrawalDawn).StringFixed(0), p.SSBenefitRobert.Add(p.SSBenefitDawn).StringFixed(0), p.NetIncome.StringFixed(0))
+			row += fmt.Sprintf(",%s,%s,%s,%s,%s", p.SalaryPersonA.Add(p.SalaryPersonB).StringFixed(0), p.PensionPersonA.Add(p.PensionPersonB).StringFixed(0), p.TSPWithdrawalPersonA.Add(p.TSPWithdrawalPersonB).StringFixed(0), p.SSBenefitPersonA.Add(p.SSBenefitPersonB).StringFixed(0), p.NetIncome.StringFixed(0))
 		}
 		fmt.Println(row)
 	}

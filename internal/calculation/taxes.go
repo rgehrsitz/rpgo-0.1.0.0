@@ -482,43 +482,43 @@ func (ce *CalculationEngine) calculateTaxes(personA, personB *domain.Employee, s
 	personADeathYearIndex, personBDeathYearIndex := deriveDeathYearIndexes(scenario, personA, personB, year+1+5) // simple upper bound
 	personADeceased := personADeathYearIndex != nil && year >= *personADeathYearIndex
 	personBDeceased := personBDeathYearIndex != nil && year >= *personBDeathYearIndex
-		if (personADeceased || personBDeceased) && !(personADeceased && personBDeceased) {
-				// One survivor; evaluate filing status switch policy
-				if scenario != nil && scenario.Mortality != nil && scenario.Mortality.Assumptions != nil {
-					mode := scenario.Mortality.Assumptions.FilingStatusSwitch
-					switch mode {
-					case "immediate":
-						filingStatus = "single"
-						seniors = 0
-						// Count surviving senior for additional deduction
-						if !personADeceased && agePersonA >= 65 {
-							seniors = 1
-						}
-						if !personBDeceased && agePersonB >= 65 {
-							seniors = 1
-						}
-					case "next_year":
-						// Switch next year after death event
-						deathYear := 0
-						if personADeceased && personADeathYearIndex != nil {
-							deathYear = *personADeathYearIndex
-						}
-						if personBDeceased && personBDeathYearIndex != nil {
-							deathYear = *personBDeathYearIndex
-						}
-						if year > deathYear {
-							filingStatus = "single"
-							seniors = 0
-							if !personADeceased && agePersonA >= 65 {
-								seniors = 1
-							}
-							if !personBDeceased && agePersonB >= 65 {
-								seniors = 1
-							}
-						}
+	if (personADeceased || personBDeceased) && !(personADeceased && personBDeceased) {
+		// One survivor; evaluate filing status switch policy
+		if scenario != nil && scenario.Mortality != nil && scenario.Mortality.Assumptions != nil {
+			mode := scenario.Mortality.Assumptions.FilingStatusSwitch
+			switch mode {
+			case "immediate":
+				filingStatus = "single"
+				seniors = 0
+				// Count surviving senior for additional deduction
+				if !personADeceased && agePersonA >= 65 {
+					seniors = 1
+				}
+				if !personBDeceased && agePersonB >= 65 {
+					seniors = 1
+				}
+			case "next_year":
+				// Switch next year after death event
+				deathYear := 0
+				if personADeceased && personADeathYearIndex != nil {
+					deathYear = *personADeathYearIndex
+				}
+				if personBDeceased && personBDeathYearIndex != nil {
+					deathYear = *personBDeathYearIndex
+				}
+				if year > deathYear {
+					filingStatus = "single"
+					seniors = 0
+					if !personADeceased && agePersonA >= 65 {
+						seniors = 1
+					}
+					if !personBDeceased && agePersonB >= 65 {
+						seniors = 1
 					}
 				}
+			}
 		}
+	}
 
 	// Check if this is a transition year (has both working and retirement income)
 	isTransitionYear := (workingIncomePersonA.GreaterThan(decimal.Zero) || workingIncomePersonB.GreaterThan(decimal.Zero)) &&
